@@ -2,6 +2,9 @@
 
 Đây là danh sách nghiên cứu và tiêu chí chọn, KHÔNG phải danh sách đã cài hay benchmark trên máy.
 
+> **Cảnh báo:** Đây là catalog nghiên cứu, không phải tập phần mềm phải cài. Muốn đề xuất cho một máy thật phải hoàn thành G0 kiểm kê cấu hình **và** software/model đã cài, rồi đánh giá tương thích theo [Hardware-First](docs/HARDWARE-FIRST-SELECTION.md). "Required" là yêu cầu về *năng lực*, không đồng nghĩa bắt buộc cài đúng một tên thư viện.
+
+
 | Năng lực | Candidate | Ưu tiên | Kiểm tra bắt buộc |
 |---|---|---|---|
 | Probe/convert/render | FFmpeg + ffprobe | Required | binary, codecs, loudnorm, GPU encoder thực tế |
@@ -19,6 +22,9 @@
 | Advanced speech | Coqui family | Conditional | code vs weight license, packaging |
 | Motion templates | Remotion | Required when templates needed | Node/browser, license and font checks |
 | GPU acceleration | CUDA/ROCm/Metal/DirectML/CPU | Backend not product | detect supported actual path |
+
+## Báo cáo lựa chọn cho từng thiết bị
+Sau G0, lập [TOOL-COMPATIBILITY-REPORT](docs/templates/TOOL-COMPATIBILITY-REPORT.md), phân loại INSTALLED_USABLE / INSTALL_PROPOSED / CONDITIONAL / INCOMPATIBLE / UNKNOWN kèm bằng chứng CPU/RAM/GPU/backend/disk, model/license, phiên bản, phương án CPU fallback và phạm vi cần duyệt. Khi không có dữ liệu máy thật, **không tạo danh sách cài đặt cá nhân hóa**.
 
 ## Quy tắc lựa chọn
 1. Xem máy có gì, không cài lại khi hoạt động đúng.

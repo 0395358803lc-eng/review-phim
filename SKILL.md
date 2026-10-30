@@ -15,9 +15,12 @@ description: Use when planning or directing AI-assisted movie reviews, recaps, e
 - For evidence and file contracts: [docs/ARTIFACT-CONTRACTS.md](docs/ARTIFACT-CONTRACTS.md), [schemas/](schemas/).
 - For rights, security, recovery and QA: [policies/](policies/), [tests/](tests/).
 
+## Mandatory Hardware-First / compatibility gate
+For real host work, **a live device-specific read-only hardware AND installed-tool/model inventory must precede any machine-specific install recommendation**. Read [docs/HARDWARE-FIRST-SELECTION.md](docs/HARDWARE-FIRST-SELECTION.md). Existing usable tools are reused; incompatible, conditional and unknown candidates are separated. No automatic downloads/installs, no guessed GPU compatibility. Explicit G1 scope approval precedes writes.
+
 ## Operating decision
 1. **Request is document design/review only:** operate entirely on Markdown; do not connect a machine, install models, request video path or claim a render.
-2. **Request is real video processing:** confirm connector/device/approved path and inspect read-only capabilities. Never invent command execution, remote access, model abilities, observations or file outputs.
+2. **Request is real video processing:** verify live connector/device/approved path, inventory real hardware and existing software/model READ_ONLY first, then produce host-compatible recommendations and approval plan. Never invent command execution, remote access, model abilities, observations or file outputs.
 3. Choose a workflow: recap summarizes narrative; critical review argues an interpretation; ending explained weighs evidence; generic video analysis may require verification of external facts.
 4. Run observation -> transcript/shots -> scenes/evidence -> narrative -> script -> clip verification -> voice/EDL -> render -> QC/handoff. Detailed gates are in [ORCHESTRATION.md](ORCHESTRATION.md).
 5. All objective claims reference source hash/timecode/evidence IDs. Uncertain findings are INFERRED or UNSUPPORTED; do not promote them to VERIFIED from model confidence.

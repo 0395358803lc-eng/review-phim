@@ -8,13 +8,12 @@ Disk cap (models + tools + cache + temp):
 Need Internet? exact domains/purposes:
 Permission window and operations:
 
-## Dependencies
-| component | current? | proposed pinned version | download size estimate | license/weights terms | target path | GPU backend | smoke test |
+## Dependencies — fill only **after** G0 host inventory
+G0 report / timestamp / device_id: NOT_AVAILABLE. Linked [compatibility report](TOOL-COMPATIBILITY-REPORT.md): NOT_CREATED. Static TOOL-REGISTRY names are not pre-approved install items. Never install rows marked UNKNOWN, CONDITIONAL or INCOMPATIBLE.
+
+| required capability | installed version/path and evidence | host-compatible candidate | verdict | pinned version/model/license | download/disk estimate | approved target root | CPU/GPU fallback and smoke test |
 |---|---|---|---|---|---|---|---|
-| FFmpeg | UNKNOWN | PROPOSED | UNKNOWN | CHECK | tools/bin | CPU/encoder test | ffprobe + short encode |
-| PySceneDetect | UNKNOWN | PROPOSED | UNKNOWN | CHECK | tools/envs | CPU | sample shot table |
-| ASR model | UNKNOWN | PROPOSED | UNKNOWN | CHECK | tools/models | TESTED BACKEND ONLY | sample transcript |
-| Remotion | UNKNOWN | PROPOSED | UNKNOWN | CHECK | tools/envs | renderer check | sample template |
+| To be determined from G0 | UNKNOWN | NOT_SELECTED | UNKNOWN | CHECK | UNKNOWN | NOT_APPROVED | NOT_TESTED |
 
 ## Required decisions
 - [ ] Approve exact device and writable root

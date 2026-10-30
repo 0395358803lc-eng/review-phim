@@ -1,5 +1,8 @@
 # Hợp đồng truyền dữ liệu giữa các bước
 
+## Hợp đồng tiền xử lý: host tool selection
+Trước công đoạn Ingest của job thật cần có báo cáo inventory READ_ONLY theo device_id và [host compatibility report](templates/TOOL-COMPATIBILITY-REPORT.md) nêu rõ dữ liệu quan sát, lựa chọn công cụ phù hợp, tool/model đã có, những thứ cần cài, giới hạn và trạng thái phê duyệt. Không được suy diễn bằng chứng kiểm kê từ một catalog tĩnh. Xem [Hardware-First](HARDWARE-FIRST-SELECTION.md).
+
 ## 1. Artifact chain (reference, not files generated yet)
 
 | Stage | Bắt buộc vào | Bắt buộc ra | Consumer |

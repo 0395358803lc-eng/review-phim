@@ -3,6 +3,9 @@
 ## Mục đích
 Đây là hướng dẫn nạp tài liệu vào AI Agent, không phải yêu cầu thao tác máy ngay lúc đọc file. Có thể dùng một phiên ChatGPT có khả năng đọc repo/tài liệu và công cụ máy từ xa (nếu được cấp quyền sau này).
 
+## Quy tắc không được bỏ qua
+Chỉ khi đã xác minh máy thật và kiểm kê READ_ONLY **phần cứng cùng phần mềm/model** mới được lập danh sách công nghệ phù hợp để cài đặt. Khi mới đọc repo, chỉ được nói về catalog chung. Trình tự và trạng thái nằm trong [Hardware-First](HARDWARE-FIRST-SELECTION.md).
+
 ## Cách nạp
 1. Trỏ AI Agent đến đường dẫn kho nhánh được phê duyệt; yêu cầu đọc toàn bộ [SKILL.md](../SKILL.md).
 2. Agent chỉ đọc thêm file theo ngữ cảnh: [ORCHESTRATION.md](../ORCHESTRATION.md), workflow cụ thể, agent chuyên môn, schema và policies. Tránh tải tất cả tệp vào một prompt cùng lúc.
