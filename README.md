@@ -34,3 +34,8 @@ Khi xử lý video trên máy thực, ChatGPT phải **kết nối đúng máy �
 
 ## Nguồn
 Thiết kế dựa trên báo cáo người dùng cung cấp `deep-research-report.md` (391 dòng); không đăng bản báo cáo gốc lên kho public. Đối chiếu theo [docs/RESEARCH-TRACEABILITY.md](docs/RESEARCH-TRACEABILITY.md). Các cách triển khai bổ sung được phân biệt với nội dung báo cáo.
+
+## Documentation validation and plugin packaging
+- Run `python -m unittest discover -s tests -p 'test_validate_docs.py' -v` and `python scripts/validate_docs.py` (Python standard library only).
+- Checks cover local links, JSON example syntax and basic envelopes. They do **not** validate real video processing, plugin installation or agent behavior.
+- See [Plugin Packaging](docs/PLUGIN-PACKAGING.md) and [Evidence Bridge Contract](docs/EVIDENCE-BRIDGE-CONTRACT.md). No host/plugin permissions are implied.
