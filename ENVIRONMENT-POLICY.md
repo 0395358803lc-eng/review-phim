@@ -1,5 +1,8 @@
 # Host setup & environment policy
 
+## Hardware-First dependency gate
+G0 gồm hai lượt READ_ONLY: (1) phần cứng/OS/backend/disk; (2) phần mềm/runtime/model hiện có. Chỉ khi có evidence đủ tin cậy mới lập báo cáo lựa chọn công cụ tương thích. G1 mới yêu cầu phê duyệt chính xác danh sách cần cài, nguồn tải, license, phiên bản, vị trí và tài nguyên. TOOL-REGISTRY.md không phải install plan. [Quy định chi tiết](docs/HARDWARE-FIRST-SELECTION.md).
+
 ## Scope/Gates
 G0 đọc-only: chỉ xem filesystem, ffprobe/version, RAM/GPU/storage/process và tài liệu; không tải phần mềm. G1 phê duyệt riêng device_id, paths, phần mềm/model cụ thể, dung lượng tối đa, license, network endpoints, quyền ghi. Không coi đồng ý cho skill là đồng ý thay driver hay cài global.
 

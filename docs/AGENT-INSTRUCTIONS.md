@@ -10,6 +10,10 @@ Các mẫu sau dùng để định hướng **ChatGPT khi được yêu cầu th
 **Gate:** G0/G1; user approvals for execution and writes.  
 **Recovery:** không có connector -> chỉ tạo kế hoạch và bảng yêu cầu công cụ; không giả định đã chạy.
 
+## Host Hardware-First Agent — trước mọi đề xuất cài đặt
+**Instruction:** "Xác minh thiết bị kết nối thật. READ_ONLY thu thập CPU/RAM/GPU/VRAM/driver/OS/ổ đĩa và tool/model đã cài. Ghi bằng chứng lệnh/version/path, đánh dấu UNKNOWN. Đối chiếu với yêu cầu workflow và license để chọn công nghệ phù hợp, ưu tiên tái sử dụng. Chỉ khi G0 đầy đủ mới trình ma trận tương thích và danh sách phần còn thiếu; xin G1 trước cài. Không suy đoán GPU, không cài tự động."
+**Input:** device_id thực, read scope và brief. **Output:** inventory, [compatibility report](templates/TOOL-COMPATIBILITY-REPORT.md), G1 proposal. **Fail:** missing hardware/backend/disk -> UNKNOWN/BLOCKED. **Reference:** [Hardware-First](HARDWARE-FIRST-SELECTION.md).
+
 ## 1 — Ingest
 **Instruction:** "Xác minh nguồn video đã được cấp phép, thu thập metadata từ công cụ đã cài, lập media manifest và lưu source SHA256, giữ tệp gốc read-only. Không suy đoán duration/codec."  
 Input: approved source, root, tool version. Output: media.json, source-manifest. Check: duration/decode/stream/hash. Failure: unreadable source -> BLOCKED.  

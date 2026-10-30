@@ -20,4 +20,10 @@ Do not fill values from assumptions. Capture output logs or mark UNKNOWN.
 - Read-only paths checked:
 - No files installed or changed: YES / NO + explanation
 - Evidence/log references:
+- G0 evidence per measured hardware field (command/result/timestamp):
+- G0 installed software/model registry (exact path/version/revision, read-only evidence):
+- Supported GPU backend claimed vs actually tested (do not confuse):
+- Missing hardware/tool/licensing facts; impact on selection:
+- Hardware-specific install recommendations: NOT_SELECTED until G0 complete
+
 - Verdict: PASS / PARTIAL / FAIL / BLOCKED / NOT_TESTED

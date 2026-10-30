@@ -6,6 +6,9 @@ Bộ kỹ năng bằng Markdown hướng dẫn ChatGPT điều phối công cụ
 
 **Trạng thái phát hành:** documentation v1.0 (chờ đánh giá sử dụng thực tế). Nội dung đã được soạn; **chưa kiểm thử agent thực hiện theo tài liệu** và chưa có kết quả render video thực tế.
 
+## Hardware-First: quy tắc bắt buộc trước khi đề xuất cài đặt
+Khi xử lý video trên máy thực, ChatGPT phải **kết nối đúng máy → kiểm kê READ_ONLY CPU/RAM/GPU/VRAM/driver/OS/ổ cứng và phần mềm/model đã cài → đánh giá tương thích theo nhu cầu → đề xuất danh sách công cụ còn thiếu → xin duyệt → mới cài và chạy thử**. TOOL-REGISTRY.md chỉ là catalog, không phải gói cài mặc định. Không có inventory thì không được cá nhân hóa danh sách cài đặt. Xem [Hardware-First Selection](docs/HARDWARE-FIRST-SELECTION.md).
+
 ## Bắt đầu đọc
 1. [SKILL.md](SKILL.md) — entrypoint agent, điều kiện kích hoạt, quy tắc và dẫn đến tài liệu chuyên sâu.
 2. [docs/DOCUMENTATION-SCOPE.md](docs/DOCUMENTATION-SCOPE.md) — định nghĩa phạm vi bộ tài liệu và những gì chưa được làm.

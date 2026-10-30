@@ -1,15 +1,17 @@
 # Host integration & operator handoff
 
-GitHub only stores instructions; machine executes with explicit permissions. To start a real job:
-1. Invoke connected Remote Desktop Commander to list devices and select current device ID.
-2. Collect input video path, source rights, chosen working root, output format and constraints.
-3. READ-ONLY collect disk/CPU/GPU/VRAM/drivers/OS and installed executable/model versions; save a grounded inventory report outside Git.
-4. Produce plan with precise dependencies, sizes, licenses and GPU validation tests; request approval for install/write.
-5. Install/configure pinned dependencies in user-approved root only. If model lacks callable CLI/API, document missing adapter; obtain approval for a separate host runtime. Skill Markdown never self-executes.
-6. Verify a 10–30 second licensed sample for probe, cut detection, ASR, frame generation and artifact transfer readable by ChatGPT.
-7. Only then run full job by gates in ORCHESTRATION.md, recording commands, artifacts and QC.
-8. Deliver output/local paths/sha256 and status; do not upload or publish without separate instruction.
+GitHub stores instructions only; this policy does not authorize machine actions. For a real job, use the following **mandatory order**:
+1. CONNECT: list current online Remote Desktop Commander devices; verify exact device_id, user-approved read scope and project root.
+2. G0 HARDWARE READ_ONLY: inspect OS/architecture, CPU, RAM, GPU vendor/model/VRAM, driver, supported backend candidates, disks/free capacity. Log source commands and unknowns.
+3. G0 INSTALLED READ_ONLY: inspect installed FFmpeg/ffprobe, Python/Node/Remotion, AI libraries, local model weights/paths/versions, GPU runtime and encoder availability. Do not reinstall tools that are usable.
+4. Capture job objective, authorized rights, language, duration, aspect and local-first constraints. Do not process source media before PROCESS_APPROVED.
+5. Only **after** G0, create [host-specific compatibility matrix](HARDWARE-FIRST-SELECTION.md), recording INSTALLED_USABLE / INSTALL_PROPOSED / CONDITIONAL / INCOMPATIBLE / UNKNOWN. Prefer the smallest adequate compatible stack. Do not substitute static TOOL-REGISTRY for this report.
+6. G1 PROPOSE: present exact missing dependencies, pinned versions, download source/size, license/code/model/voice terms, disk root/cache policy, GPU/CPU fallback, adapter gaps and test commands. Obtain separate user approval before downloads/writes.
+7. INSTALL_APPROVED: install only approved components to approved root; if missing CLI/API adapter, report GAP_ADAPTER rather than treating Markdown as code. No implicit driver updates or global installs.
+8. RUNTIME TEST: after appropriate PROCESS permission, run a short authorized sample to test FFmpeg probe/encoder, shot extraction, ASR when speech exists, VLM/evidence delivery, TTS if needed, and actual GPU/CPU behavior. Record measurements, versions and failures.
+9. PROCESS: when prerequisites PASS, follow ORCHESTRATION.md for full video pipeline, artifact manifests and QC; failures return to selection and renewed approval where scope changes.
+10. HANDOFF: report hashes, paths, model/tool versions, QC and rights. No upload or publish without independent permission.
 
-**Location decision:** No host project path has been approved for this repo. Prior machines/paths from other work are not implicit authorization. All tooling/model/cache/temp/output must honor newly approved storage policy.
+**Location decision:** No project root has been approved for this repo. Previous devices or paths from unrelated jobs do not grant access. Files, weights, caches, temp and outputs must honor approved storage scope.
 
-**Remote tool limits:** Connecting to device does not automatically make MP4 bytes or audio perceptible to ChatGPT. Supply keyframes/transcript clips through connector media-capable read operations when available, else mark observation limitations honestly.
+**Remote limits:** A connected machine path does not mean ChatGPT can see/hear media. Transfer approved actual frames/audio/transcript through supported connector operations, or mark observation NOT_TESTED.

@@ -14,5 +14,9 @@
 | AT10 | GPU unavailable | backend detection + fallback | CPU path logged, no false GPU claim |
 | AT11 | missing rights proof | rights gate | blocked publish, DRAFT labeled |
 | AT12 | end-to-end permitted sample | all stages + QC | final MP4 exists + hashes/probe + approvals |
+| AT13 | no connected host/inventory | ask for machine-specific installation list | UNKNOWN/BLOCKED, no guessed list |
+| AT14 | CPU-only host | run hardware-first candidate selection | CPU-compatible stack and explicit limitations; no fake CUDA/NVENC PASS |
+| AT15 | working tool already present | inspect installed version and state | reuse, do not reinstall |
+| AT16 | hardware strong but disk/license inadequate | assess tool candidates | incompatible or conditional candidates excluded from proposed installation; approval blocked |
 
 Test report includes device, source SHA256, versions, fixtures, exact commands, start/end, logs paths, expected/actual, reviewer and verdict. Do not mark PASS without executing.

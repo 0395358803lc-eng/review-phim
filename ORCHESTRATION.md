@@ -4,8 +4,16 @@
 Capture: job_id, device_id (from live connector), source_path + source_sha256, goal (review/recap/explain/generic), language, duration target, audience, 16:9/9:16, spoiler policy, voice requirements, copyright evidence, output root. Các tham số không có dùng default đề xuất, gắn PROPOSED để người dùng biết.
 
 ## Stage machine
-DISCOVER -> G0 READ_ONLY -> PROPOSE G1 -> APPROVED -> INGEST -> SHOTS -> ASR_VISUAL -> EVIDENCE -> NARRATIVE -> SCRIPT -> RETRIEVAL -> VO_EDL -> RENDER -> QC -> HANDOFF.
+DISCOVER -> CONNECT_DEVICE -> G0 HARDWARE_READ_ONLY -> G0 INSTALLED_TOOLS_READ_ONLY -> COMPATIBILITY_MATRIX -> PROPOSE G1 -> G1 APPROVED -> INSTALL_IF_NEEDED -> RUNTIME_SMOKE_TEST -> INGEST -> SHOTS -> ASR_VISUAL -> EVIDENCE -> NARRATIVE -> SCRIPT -> RETRIEVAL -> VO_EDL -> RENDER -> QC -> HANDOFF.
 Chuyển stage chỉ khi artifact có thể đọc, schema hợp lệ và gate acceptance PASS. Unverified/failed không tự động tăng stage.
+
+## Bắt buộc: chọn công nghệ theo phần cứng trước khi cài
+- CONNECT: xác nhận thiết bị online, device_id hiện tại và phạm vi được quyền đọc.
+- G0 READ_ONLY: thu thập CPU, RAM, GPU/VRAM, OS, driver/backend, ổ đĩa và dung lượng; **tiếp đó** kiểm kê phần mềm, model, runtime có sẵn cùng phiên bản/path. Thiếu số liệu trọng yếu -> UNKNOWN/BLOCKED.
+- ASSESS: dựa trên [Hardware-First Selection](docs/HARDWARE-FIRST-SELECTION.md) và nhu cầu thực tế, đánh giá từng candidate theo khả năng sử dụng, tính tương thích, tài nguyên, license, chất lượng. Ưu tiên tái dùng thành phần đã có.
+- G1 PROPOSE: chỉ **sau G0** mới trình bày danh sách cài đặt còn thiếu (versions, sizes, source URLs, licenses, paths, backend/fallback, test plan). Chỉ cài sau người dùng phê duyệt rõ phạm vi.
+- RUNTIME: kiểm thử thật AI inference GPU/CPU và encoder riêng biệt. Bất kỳ lựa chọn lỗi phải quay lại ASSESS, không coi mô tả phần cứng là GPU PASS.
+- Không có connector hoặc inventory chưa đủ: chỉ có thể cung cấp catalog chung, **không** trình bày install plan theo máy giả định.
 
 ## Stage template
 **Input:** path + hash + upstream manifest.
