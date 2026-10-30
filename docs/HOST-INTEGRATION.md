@@ -15,3 +15,6 @@ GitHub stores instructions only; this policy does not authorize machine actions.
 **Location decision:** No project root has been approved for this repo. Previous devices or paths from unrelated jobs do not grant access. Files, weights, caches, temp and outputs must honor approved storage scope.
 
 **Remote limits:** A connected machine path does not mean ChatGPT can see/hear media. Transfer approved actual frames/audio/transcript through supported connector operations, or mark observation NOT_TESTED.
+
+## Bằng chứng từ host trở lại agent
+Mọi adapter chuyển frame/clip/audio phải theo [EVIDENCE-BRIDGE-CONTRACT.md](EVIDENCE-BRIDGE-CONTRACT.md). Nếu bridge không cho phép quan sát đoạn nguồn, ghi GAP_EVIDENCE_BRIDGE / NOT_TESTED, không coi mô tả VLM là VERIFIED.
