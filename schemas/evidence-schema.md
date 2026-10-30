@@ -22,20 +22,16 @@ schema_version: string (mặc định "1.0"); job_id: string; source_sha256: str
     "config_hash": "demo"
   },
   "produced_at": "2026-10-30T00:00:00Z",
-  "evidence": [
-    {
-      "evidence_id": "EV_042",
-      "kind": "FRAME",
-      "media_source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
-      "start_s": 3130,
-      "end_s": 3131,
-      "reference": "KF_42_01",
-      "observation": "person holding portable radio",
-      "state": "INFERRED",
-      "reason": "one frame cannot establish destruction",
-      "reviewed_by": null
-    }
-  ]
+  "evidence_id": "EV_042",
+  "kind": "FRAME",
+  "media_source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "start_s": 3130,
+  "end_s": 3131,
+  "reference": "KF_42_01",
+  "observation": "person holding portable radio",
+  "state": "INFERRED",
+  "reason": "one frame cannot establish destruction",
+  "reviewed_by": null
 }
 ~~~
 
