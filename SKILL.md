@@ -8,6 +8,7 @@ description: Use when planning or directing AI-assisted movie reviews, recaps, e
 **Core rule:** evidence first, script second, verified clips third, edit last. This is a documentation-based agent skill, NOT an installed video application. Agent behavior is not yet experimentally validated.
 
 ## Load selectively
+- For packaging through a ChatGPT plugin: [docs/PLUGIN-PACKAGING.md](docs/PLUGIN-PACKAGING.md). For real evidence transfers: [docs/EVIDENCE-BRIDGE-CONTRACT.md](docs/EVIDENCE-BRIDGE-CONTRACT.md).
 - For orientation / scope: [README.md](README.md), [docs/DOCUMENTATION-SCOPE.md](docs/DOCUMENTATION-SCOPE.md).
 - For a real job: [ORCHESTRATION.md](ORCHESTRATION.md), [docs/AGENT-INSTRUCTIONS.md](docs/AGENT-INSTRUCTIONS.md).
 - For film/video format: corresponding [workflows/](workflows/).
