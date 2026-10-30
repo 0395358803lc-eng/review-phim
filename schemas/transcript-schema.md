@@ -23,32 +23,28 @@ schema_version: string (mặc định "1.0"); job_id: string; source_sha256: str
     "config_hash": "demo"
   },
   "produced_at": "2026-10-30T00:00:00Z",
-  "segments": [
+  "segment_id": "ASR_042",
+  "start_s": 3130.4,
+  "end_s": 3133.6,
+  "text": "Đừng mở cánh cửa đó.",
+  "language": "vi",
+  "speaker_cluster": "SPEAKER_00",
+  "asr_confidence": null,
+  "overlap_flag": false,
+  "words": [
     {
-      "segment_id": "ASR_001",
-      "start_s": 12.2,
-      "end_s": 15.6,
-      "text": "Đừng mở cánh cửa đó.",
-      "language": "vi",
-      "speaker_cluster": "SPEAKER_00",
-      "asr_confidence": null,
-      "overlap_flag": false,
-      "words": [
-        {
-          "text": "Đừng",
-          "start_s": 12.2,
-          "end_s": 12.55
-        },
-        {
-          "text": "mở",
-          "start_s": 12.6,
-          "end_s": 12.8
-        }
-      ],
-      "source_refs": [
-        "audio:12.2-15.6"
-      ]
+      "text": "Đừng",
+      "start_s": 3130.4,
+      "end_s": 3130.75
+    },
+    {
+      "text": "mở",
+      "start_s": 3130.8,
+      "end_s": 3131
     }
+  ],
+  "source_refs": [
+    "audio:3130.4-3133.6"
   ]
 }
 ~~~
