@@ -15,9 +15,6 @@
 ## Lộ trình thực thi tương lai — chỉ tài liệu hướng dẫn, KHÔNG đang chạy
 | Đợt | Nội dung dự kiến | Cần quyết định riêng |
 |---|---|---|
-**Hardware-First bắt buộc:** Đợt 0 xác thực thiết bị; Đợt 1 kiểm kê READ_ONLY **phần cứng + toàn bộ tool/model đang có**; Đợt 2 mới lập compatibility matrix và danh sách cần bổ sung; Đợt 3 chỉ cài sau G1 và kiểm chứng runtime. Xem [HARDWARE-FIRST-SELECTION.md](HARDWARE-FIRST-SELECTION.md).
-
-
 | 0 | Chọn thiết bị/project root | Quyền kết nối |
 | 1 | READ-ONLY inventory | Quyền đọc và path |
 | 2 | Model/tool/license matrix | Quyết định cấu hình |
@@ -28,6 +25,8 @@
 | 7 | FFmpeg/Remotion render | Profile đầu ra |
 | 8 | QC factual/editorial/technical/rights | Phê duyệt thành phẩm |
 | 9 | End-to-end benchmark + handoff | Kết quả đo thật |
+
+**Hardware-First bắt buộc:** Đợt 0 xác thực thiết bị; Đợt 1 kiểm kê READ_ONLY **phần cứng + toàn bộ tool/model đang có**; Đợt 2 mới lập compatibility matrix và danh sách cần bổ sung; Đợt 3 chỉ cài sau G1 và kiểm chứng runtime. Xem [HARDWARE-FIRST-SELECTION.md](HARDWARE-FIRST-SELECTION.md).
 
 Không lẫn trạng thái của Pha tài liệu với Đợt máy thực. Tests ở tests/ là specification, không được coi là đã chạy. Muốn triển khai sau này bắt đầu từ [HOST-INTEGRATION.md](HOST-INTEGRATION.md) khi người dùng tạo nhiệm vụ mới.
 
