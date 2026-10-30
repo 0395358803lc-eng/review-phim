@@ -22,42 +22,38 @@ schema_version: string (mặc định "1.0"); job_id: string; source_sha256: str
     "config_hash": "demo"
   },
   "produced_at": "2026-10-30T00:00:00Z",
-  "scenes": [
+  "scene_id": "SC_042",
+  "start_s": 3124.2,
+  "end_s": 3198.8,
+  "shot_ids": [
+    "SH_161",
+    "SH_162"
+  ],
+  "setting": "underground station",
+  "characters": [
     {
-      "scene_id": "SC_042",
-      "start_s": 3124.2,
-      "end_s": 3198.8,
-      "shot_ids": [
-        "SH_161",
-        "SH_162"
-      ],
-      "setting": "underground station",
-      "characters": [
-        {
-          "entity_id": "CHAR_01",
-          "identification_status": "INFERRED"
-        }
-      ],
-      "actions": [
-        "two people talk near radio"
-      ],
-      "keyframes": [
-        {
-          "frame_id": "KF_42_01",
-          "time_s": 3130,
-          "path": "work/DEMO-001/artifacts/kf_42.jpg",
-          "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
-        }
-      ],
-      "visual_tags": [
-        "radio",
-        "platform"
-      ],
-      "confidence": null,
-      "source_refs": [
-        "ASR_001"
-      ]
+      "entity_id": "CHAR_01",
+      "identification_status": "INFERRED"
     }
+  ],
+  "actions": [
+    "two people talk near radio"
+  ],
+  "keyframes": [
+    {
+      "frame_id": "KF_42_01",
+      "time_s": 3130,
+      "path": "work/DEMO-001/artifacts/kf_42.jpg",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    }
+  ],
+  "visual_tags": [
+    "radio",
+    "platform"
+  ],
+  "confidence": null,
+  "source_refs": [
+    "ASR_042"
   ]
 }
 ~~~
