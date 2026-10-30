@@ -30,3 +30,6 @@ Chỉ khi đã xác minh máy thật và kiểm kê READ_ONLY **phần cứng c�
 - "Semantic score 0.9" không chứng minh nhân vật thực sự làm hành động đang kể.
 - "Video MP4 render OK" không chứng minh chất lượng nhận định hay bản quyền.
 - "Agent đã đưa command" không chứng minh lệnh đã được chạy thành công.
+
+## Đóng gói qua plugin
+Xem [PLUGIN-PACKAGING.md](PLUGIN-PACKAGING.md) để giữ nguyên SKILL.md và các đường dẫn tham chiếu; GitHub chỉ là nguồn tài liệu, không phải plugin đã được cài. Cần kiểm chứng thực tế trên môi trường ChatGPT đích.
