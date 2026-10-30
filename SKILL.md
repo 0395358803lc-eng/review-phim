@@ -1,37 +1,30 @@
 ---
 name: ai-video-review-agent
-description: Agent-Orchestrated Brain-Only workflow for evidence-grounded movie review, recaps, explainers and arbitrary-video commentary using authorized remote computer tools.
+description: Use when planning or directing AI-assisted movie reviews, recaps, ending explanations, general video commentary, or video-to-script-to-edit workflows, especially when factual scene claims, matching footage, and reusable local AI tools require verifiable evidence.
 ---
 
-# AI Video Review — SKILL ENTRYPOINT
+# AI Video Review — Brain-Only Skill
 
-## Triggers
-Khi người dùng yêu cầu review/tóm tắt/phân tích phim hoặc video, tạo video bình luận, xây dựng/cập nhật workflow sản xuất AI Video Review hoặc kiểm tra job đã thực hiện. Khi được gọi, đọc tài liệu liên quan thay vì cố giữ toàn bộ skill trong ngữ cảnh.
+**Core rule:** evidence first, script second, verified clips third, edit last. This is a documentation-based agent skill, NOT an installed video application. Agent behavior is not yet experimentally validated.
 
-## Chọn năng lực
-1. Khởi đầu ở [ORCHESTRATION.md](ORCHESTRATION.md); đặt trạng thái mới là NOT_STARTED.
-2. Chọn [workflow](workflows/) theo đầu ra; không đồng nhất recap với review.
-3. Kiểm tra máy qua remote tools thực có; nếu không có connector, trả báo cáo BLOCKED và hướng dẫn cần thiết, không giả lập output.
-4. Trước thực thi đọc [ENVIRONMENT-POLICY.md](ENVIRONMENT-POLICY.md), [TOOL-REGISTRY.md](TOOL-REGISTRY.md) và [policies/gpu-selection.md](policies/gpu-selection.md).
-5. Mỗi bước dùng một tệp hợp lệ: media, scene, evidence, narrative, script, edit, QC. Xem [schemas/](schemas/).
-6. Các chuyên môn trong [agents/](agents/) là vai trò logic; không mặc định có agent nền, mạng riêng, tiến trình độc lập hoặc model ẩn.
-7. Không tự nhận có khả năng nghe hoặc xem video nguồn khi connector chỉ trả đường dẫn. Cần frame/audio/transcript và quyền truy cập thực tế.
+## Load selectively
+- For orientation / scope: [README.md](README.md), [docs/DOCUMENTATION-SCOPE.md](docs/DOCUMENTATION-SCOPE.md).
+- For a real job: [ORCHESTRATION.md](ORCHESTRATION.md), [docs/AGENT-INSTRUCTIONS.md](docs/AGENT-INSTRUCTIONS.md).
+- For film/video format: corresponding [workflows/](workflows/).
+- For specialist actions: corresponding [agents/](agents/).
+- For evidence and file contracts: [docs/ARTIFACT-CONTRACTS.md](docs/ARTIFACT-CONTRACTS.md), [schemas/](schemas/).
+- For rights, security, recovery and QA: [policies/](policies/), [tests/](tests/).
 
-## Cổng quyết định
-- G0: Chọn máy/thư mục, READ-ONLY inventory.
-- G1: Thiết kế + danh sách tool/model và giấy phép được duyệt.
-- G2: Ingest và phân đoạn xác minh metadata/timecodes.
-- G3: ASR + visual evidence + narrative graph; claim quan trọng có chứng cứ.
-- G4: Script lock và quyền sử dụng nguồn được xem xét.
-- G5: Voice/timeline/render QC kỹ thuật.
-- G6: Factual + editorial + rights QC, yêu cầu người duyệt nơi cần thiết.
-- G7: Bàn giao file + báo cáo; KHÔNG tự publish.
+## Operating decision
+1. **Request is document design/review only:** operate entirely on Markdown; do not connect a machine, install models, request video path or claim a render.
+2. **Request is real video processing:** confirm connector/device/approved path and inspect read-only capabilities. Never invent command execution, remote access, model abilities, observations or file outputs.
+3. Choose a workflow: recap summarizes narrative; critical review argues an interpretation; ending explained weighs evidence; generic video analysis may require verification of external facts.
+4. Run observation -> transcript/shots -> scenes/evidence -> narrative -> script -> clip verification -> voice/EDL -> render -> QC/handoff. Detailed gates are in [ORCHESTRATION.md](ORCHESTRATION.md).
+5. All objective claims reference source hash/timecode/evidence IDs. Uncertain findings are INFERRED or UNSUPPORTED; do not promote them to VERIFIED from model confidence.
+6. Require separate approvals for installs, private media transfer, uncertain rights and publishing. Never treat a README prompt as permission to perform those actions.
 
-## Phân loại trạng thái
-NOT_STARTED, READ_ONLY, PROPOSED, APPROVED, RUNNING, PASS, PARTIAL, FAIL, BLOCKED, NOT_TESTED. Chỉ PASS nếu có artifact, test và log được đối chiếu. Khi thiếu evidence: dừng phần khẳng định ấy, yêu cầu thu thập thêm; không vượt gate.
+## Gate/state quick reference
+G0 environment read-only; G1 approved tools/rights; G2 ingest/shot verification; G3 time-aligned evidence; G4 factual script lock; G5 voice/timeline/render; G6 editorial/technical/rights QC; G7 handoff. Status: NOT_STARTED, PROPOSED, APPROVED, RUNNING, PASS, PARTIAL, FAIL, NOT_TESTED, BLOCKED.
 
-## Hành động cấm nếu chưa duyệt
-Cài model, xóa/chuyển dữ liệu, thay driver, ghi ngoài root đã chấp thuận, gọi API trả phí, upload phim lên cloud, xuất bản, tắt kiểm tra bản quyền, merge main. Quyền tải weights/công cụ, quyền đọc video và quyền publish là ba quyền riêng.
-
-## Output tối thiểu mỗi lần
-job_id, device_id, input file/hash, stage/status, artifacts/paths, tool+version, expected vs actual checks, unresolved risks, next gate. Xem [tests/quality-gates.md](tests/quality-gates.md).
+## Final response contract (only for real jobs)
+State job ID and real device, exact completed stages, hash-backed artifacts, tool versions and observable checks, unresolved risks, rights decisions and required next action. If nothing executed, report NOT_TESTED. Don't claim full automation from the skill text alone.

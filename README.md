@@ -1,28 +1,33 @@
 # AI Video Review — Agent-Orchestrated Brain-Only
 
-Bộ tài liệu điều phối ChatGPT để phân tích video/phim dựa trên bằng chứng, viết kịch bản, chọn cảnh, tổng hợp lời đọc, dựng và kiểm tra video bằng công cụ/model chạy trên máy người dùng.
+**BỘ TÀI LIỆU SKILL, KHÔNG PHẢI ỨNG DỤNG THỰC THI.**
 
-**Trạng thái:** V1 documentation baseline / NOT YET RUNTIME-VALIDATED. Có tài liệu và quy trình, chưa có bằng chứng model cục bộ đã được cài, video mẫu đã render hay chất lượng đầu cuối được nghiệm thu.
+Bộ kỹ năng bằng Markdown hướng dẫn ChatGPT điều phối công cụ và model trên máy được kết nối trong tương lai để phân tích video/phim, tạo kịch bản có bằng chứng, chọn cảnh, dựng video và kiểm soát chất lượng. Phạm vi bàn giao **hiện tại chỉ là tài liệu trong GitHub**. Không yêu cầu chọn máy, cài thư viện, tải model, xử lý phim hoặc cung cấp đường dẫn video lúc này.
 
-## Bắt đầu
-1. Cấp quyền kết nối Remote Desktop Commander; đọc [SKILL.md](SKILL.md) và [ORCHESTRATION.md](ORCHESTRATION.md).
-2. Chọn máy, thư mục làm việc và vị trí lưu tools/models/cache/output. Khảo sát READ-ONLY trước mọi cài đặt.
-3. Đọc [ENVIRONMENT-POLICY.md](ENVIRONMENT-POLICY.md), [TOOL-REGISTRY.md](TOOL-REGISTRY.md) để lập bảng có/thiếu và phương án tăng tốc GPU thực sự tương thích.
-4. Chọn workflow: [movie-review](workflows/movie-review.md), [movie-recap](workflows/movie-recap.md), [ending-explained](workflows/ending-explained.md), [generic-video-review](workflows/generic-video-review.md), [youtube-longform](workflows/youtube-longform.md), [shorts-tiktok](workflows/shorts-tiktok.md).
-5. Chỉ thao tác khi đã duyệt phạm vi; vận hành theo gates và các schema trong [schemas/](schemas/).
-6. Đối chiếu [tests/acceptance-tests.md](tests/acceptance-tests.md) trước khi gọi dự án hoàn tất.
+**Trạng thái phát hành:** documentation v1.0 (chờ đánh giá sử dụng thực tế). Nội dung đã được soạn; **chưa kiểm thử agent thực hiện theo tài liệu** và chưa có kết quả render video thực tế.
 
-## Tài liệu nền
-Tài liệu nghiên cứu do người dùng cung cấp: **deep-research-report.md** (391 dòng; không được sao chép vào kho công khai). Đọc riêng file đính kèm khi có quyền truy cập. [Traceability](docs/RESEARCH-TRACEABILITY.md) ghi rõ yêu cầu trích xuất từ báo cáo và những bổ sung thiết kế.
+## Bắt đầu đọc
+1. [SKILL.md](SKILL.md) — entrypoint agent, điều kiện kích hoạt, quy tắc và dẫn đến tài liệu chuyên sâu.
+2. [docs/DOCUMENTATION-SCOPE.md](docs/DOCUMENTATION-SCOPE.md) — định nghĩa phạm vi bộ tài liệu và những gì chưa được làm.
+3. [docs/USAGE-GUIDE.md](docs/USAGE-GUIDE.md) — nạp skill vào môi trường agent trong tương lai và quy trình sử dụng.
+4. [ORCHESTRATION.md](ORCHESTRATION.md) — state machine, quality gates, recovery.
+5. [docs/AGENT-INSTRUCTIONS.md](docs/AGENT-INSTRUCTIONS.md) — playbook/prompt dùng lại cho từng pha khi agent được cấp quyền.
+6. [docs/ARTIFACT-CONTRACTS.md](docs/ARTIFACT-CONTRACTS.md) — nối dữ liệu giữa các khâu và danh sách output.
+7. [docs/DOCUMENTATION-VALIDATION.md](docs/DOCUMENTATION-VALIDATION.md) — kịch bản tự kiểm tra tài liệu, chưa thay thế kiểm thử thực tế.
 
-## Nguyên tắc không thỏa hiệp
-- Brain-only: các file skill là chỉ dẫn, không tự thực thi; FFmpeg/Remotion/ASR/VLM vận hành qua công cụ được cấp quyền trên máy.
-- Evidence-first: câu kể sự kiện phải có source hash/timecode và evidence ID; thiếu bằng chứng không được biến thành sự thật.
-- Local-first: không tải phim riêng tư lên cloud và không dùng API trả phí nếu chưa có phê duyệt riêng.
-- Không tự cài công cụ, tải weights, ghi đè/xóa, đăng video, sửa production hoặc tự phê duyệt bản quyền.
-- Phân biệt việc **đã tạo tài liệu** với **đã xác minh thực thi** và **đã nghiệm thu chất lượng**.
+## Cấu trúc bộ não
+- [ARCHITECTURE.md](ARCHITECTURE.md) — các lớp điều phối / remote actions / local tools / dữ liệu bằng chứng.
+- [TOOL-REGISTRY.md](TOOL-REGISTRY.md) — danh mục công cụ và nguyên tắc chọn, **không khẳng định đã cài**.
+- [ENVIRONMENT-POLICY.md](ENVIRONMENT-POLICY.md) — phạm vi và quyền vận hành, khi được người dùng cho phép trong tương lai.
+- [agents/](agents/) — 9 vai trò chuyên môn (ingest, audio, visual, narrative, script, clip retrieval, voice, editing, QC).
+- [workflows/](workflows/) — movie-review, recap, ending-explained, generic-video-review, YouTube 16:9, Shorts/TikTok 9:16.
+- [schemas/](schemas/) — hợp đồng dữ liệu, các mẫu JSON **giả lập**.
+- [policies/](policies/) — evidence validation, bản quyền, GPU, lỗi và remote security.
+- [tests/](tests/) — các tình huống cần chạy khi có môi trường thực, **không phải kết quả đã PASS**.
+- [docs/IMPLEMENTATION-ROADMAP.md](docs/IMPLEMENTATION-ROADMAP.md) — lộ trình tài liệu và hướng dẫn triển khai tương lai.
 
-## Trách nhiệm
-Người sử dụng cung cấp nguồn video có quyền xử lý, chọn máy và nơi lưu, phê duyệt bước cài đặt và các quyết định pháp lý/biên tập rủi ro. ChatGPT lập kế hoạch, yêu cầu bằng chứng, thao tác qua connector nếu thực sự được cấp quyền, đọc artifact, kiểm tra và báo cáo trung thực.
+## Nguyên tắc cốt lõi
+**Evidence-first:** lời kể dựa trên timestamp, scene IDs, transcript và video frames; không bịa hành động. **Local-first:** ưu tiên tool/model cục bộ khi thực thi về sau, không tự upload media. **Brain-only:** Markdown là hướng dẫn, không có tiến trình hay model tự chạy. **Quality-gated:** kết quả chỉ PASS khi có kiểm chứng, quyền sử dụng và phê duyệt phù hợp. **No publish:** xuất bản là quyền riêng.
 
-Xem [docs/IMPLEMENTATION-ROADMAP.md](docs/IMPLEMENTATION-ROADMAP.md) để triển khai tiếp theo.
+## Nguồn
+Thiết kế dựa trên báo cáo người dùng cung cấp `deep-research-report.md` (391 dòng); không đăng bản báo cáo gốc lên kho public. Đối chiếu theo [docs/RESEARCH-TRACEABILITY.md](docs/RESEARCH-TRACEABILITY.md). Các cách triển khai bổ sung được phân biệt với nội dung báo cáo.

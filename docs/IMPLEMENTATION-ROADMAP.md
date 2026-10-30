@@ -1,39 +1,32 @@
-# Triển khai theo Đợt (GitHub → máy thực)
+# Lộ trình — Scope hiện tại chỉ là bộ tài liệu
 
-Mọi đợt có: deliverable, thử nghiệm cụ thể, log và PASS/PARTIAL/FAIL/NOT_TESTED.
-
-| Đợt | Scope | Gate nghiệm thu |
+## Pha tài liệu (đang bàn giao trên nhánh GitHub)
+| Hạng mục | Deliverable | Nghiệm thu ở mức tài liệu |
 |---|---|---|
-| 0 | Kết nối + chọn máy/thư mục | device_id hiện thời, approved root |
-| 1 | Kiểm kê READ-ONLY | inventory có versions/backend/VRAM/disk |
-| 2 | Thiết kế/đánh giá | người dùng duyệt design, risks & rights |
-| 3 | Ma trận công cụ/model | danh sách install, license, size, GPU plan được duyệt |
-| 4 | Brain-only docs + schemas | link tồn tại, kiểm tra mẫu, review chéo |
-| 5 | Host evidence engine integration | sample shot/ASR/visual/source hash/causal refs |
-| 6 | Script writer/reviewer | claim-evidence 1:1, no unsupported facts |
-| 7 | Clip retrieval, TTS, EDL, Remotion/FFmpeg | end-to-end sample render source permitted |
-| 8 | QA đa lớp | factual/editorial/technical/rights signoffs |
-| 9 | Remote connector orchestration | resume/retry/permissions verified |
-| 10 | Real video tests, docs, ZIP handoff | artifact hash + real test logs + owner approval |
+| D0 | Design, phạm vi, traceability | Có lý do và giới hạn |
+| D1 | SKILL.md, kiến trúc và điều phối | Entrypoint và gate nhất quán |
+| D2 | Agent roles và workflows | Input/output, decisions, recovery |
+| D3 | Schemas và artifact contracts | Example syntax, linkage rules |
+| D4 | Policies, QA, future-use guide | Không tự cấp quyền máy/đăng tải |
+| D5 | DOC-QA và GitHub PR | Rõ kết quả đã kiểm và chưa kiểm |
 
-## Trạng thái hiện tại
-GitHub-only documentation implementation: Đợt 2–4 **drafted**, validation pending. Đợt 0: máy được liệt kê qua connector; chưa được xác nhận target directory/device dành riêng cho job. Đợt 1,3,5–10: NOT_TESTED/NOT_STARTED trên máy. Không xem repo docs như bằng chứng đã xử lý video.
+**Phạm vi yêu cầu hiện tại dừng ở D5.** Không yêu cầu máy, ổ đĩa, model, trình cài đặt hay video thử nghiệm. GitHub repo chỉ chứa bộ não Markdown có thể được đọc bởi ChatGPT/Agent trong nhiệm vụ tương lai.
 
-## Đầu ra từng đợt
-- G0 inventory.md (device, OS, hardware, versions).
-- G1 architecture+install manifest có xác nhận.
-- G2 media.json, shot/scenes jsonl, keyframes manifests.
-- G3 transcript, evidence, graph, claims validation.
-- G4 script.json + edit.json with rights rationale.
-- G5 final video, ffprobe report, technical qc.
-- G6 final qc report + human approved where necessary.
+## Lộ trình thực thi tương lai — chỉ tài liệu hướng dẫn, KHÔNG đang chạy
+| Đợt | Nội dung dự kiến | Cần quyết định riêng |
+|---|---|---|
+| 0 | Chọn thiết bị/project root | Quyền kết nối |
+| 1 | READ-ONLY inventory | Quyền đọc và path |
+| 2 | Model/tool/license matrix | Quyết định cấu hình |
+| 3 | Cài tool/weights | Phê duyệt tải và ghi |
+| 4 | Ingest/ASR/Vision | Nguồn video có quyền |
+| 5 | Evidence, narrative, script | Kiểm tra nội dung |
+| 6 | Clip retrieval + TTS + EDL | Rights và chất lượng |
+| 7 | FFmpeg/Remotion render | Profile đầu ra |
+| 8 | QC factual/editorial/technical/rights | Phê duyệt thành phẩm |
+| 9 | End-to-end benchmark + handoff | Kết quả đo thật |
 
-## Thứ tự ưu tiên MVP
-A: ffprobe/FFmpeg/PySceneDetect/transcript+keyframes.
-B: evidence store/scene metadata/narrative graph.
-C: claim-supported script + matched scene retrieval.
-D: voice/subtitles/EDL/render; QC.
-E: VLM/SAM2/InternVideo add-ons chỉ theo số liệu so sánh.
+Không lẫn trạng thái của Pha tài liệu với Đợt máy thực. Tests ở tests/ là specification, không được coi là đã chạy. Muốn triển khai sau này bắt đầu từ [HOST-INTEGRATION.md](HOST-INTEGRATION.md) khi người dùng tạo nhiệm vụ mới.
 
-## Không được tự động hoá mặc định
-Quyền riêng tư, thanh toán/API, cài driver, việc đăng tải, quyết định fair-use, merge main. Mỗi mục này có gate riêng.
+## Không tự động được phép
+Cài driver, thay đổi ổ đĩa, sử dụng API trả phí, upload nguồn, công bố video, xác định pháp lý fair use hoặc merge main.
