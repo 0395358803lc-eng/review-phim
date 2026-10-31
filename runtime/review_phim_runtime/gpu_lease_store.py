@@ -1,8 +1,8 @@
-"""Conservative SQLite cross-process GPU lease ledger; synthetic admission layer.
+"""Conservative, transactionally reserved CPU/GPU resource leases.
 
-No lease is silently expired or released after a crash. A trusted connector
-must reconcile the real PID before a resource claim can be released. This is
-NOT a service or a permission to execute code on the user's machine.
+Exit verification is delegated to a trusted connector that MUST check both
+PID and real OS process creation identity; a lone PID or boolean is never
+proof of termination. This module does not start processes or inspect video.
 """
 import math
 import sqlite3
@@ -10,6 +10,14 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Callable
+
+
+@dataclass(frozen=True)
+class ProcessStatus:
+    device_id: str
+    pid: int
+    start_time_ns: int
+    state: str
 
 
 @dataclass(frozen=True)
@@ -21,17 +29,24 @@ class GpuLease:
     cpu_workers: int = 0
     heavy_gpu: bool = False
     pid: int | None = None
+    process_started_ns: int | None = None
 
 
 class DurableGpuLeaseStore:
     def __init__(self, db_path: str):
         self.db_path = db_path
         with self._db() as con:
+            con.execute('BEGIN IMMEDIATE')
             con.execute('''CREATE TABLE IF NOT EXISTS gpu_leases (
                 device_id TEXT NOT NULL, job_id TEXT NOT NULL,
                 gpu_mib INTEGER NOT NULL, cpu_workers INTEGER NOT NULL,
                 heavy_gpu INTEGER NOT NULL, status TEXT NOT NULL, pid INTEGER,
+                process_started_ns INTEGER,
                 PRIMARY KEY (device_id, job_id))''')
+            # Safe forward migration: older prototypes have only the PID column.
+            columns = {r[1] for r in con.execute('PRAGMA table_info(gpu_leases)')}
+            if 'process_started_ns' not in columns:
+                con.execute('ALTER TABLE gpu_leases ADD COLUMN process_started_ns INTEGER')
 
     @contextmanager
     def _db(self):
@@ -102,36 +117,54 @@ class DurableGpuLeaseStore:
 
     def get(self, device_id: str, job_id: str) -> GpuLease | None:
         with self._db() as con:
-            row=con.execute('''SELECT status,device_id,job_id,gpu_mib,cpu_workers,heavy_gpu,pid
+            row=con.execute('''SELECT status,device_id,job_id,gpu_mib,cpu_workers,
+                               heavy_gpu,pid,process_started_ns
                                FROM gpu_leases WHERE device_id=? AND job_id=?''',
                             (device_id, job_id)).fetchone()
-        return GpuLease(row[0],row[1],row[2],row[3],row[4],bool(row[5]),row[6]) if row else None
+        return GpuLease(row[0],row[1],row[2],row[3],row[4],bool(row[5]),row[6],row[7]) if row else None
 
     def bind_pid(self, device_id: str, job_id: str, pid: int) -> bool:
-        if type(pid) is not int or pid <= 0:
+        """Legacy API intentionally disabled: a PID alone can be reused by Windows."""
+        return False
+
+    def bind_process_identity(self, device_id: str, job_id: str, pid: int,
+                              start_time_ns: int) -> bool:
+        if (type(pid) is not int or pid <= 0 or pid >= 2**63
+                or type(start_time_ns) is not int or not 0 < start_time_ns < 2**63):
             return False
         with self._db() as con:
             con.execute('BEGIN IMMEDIATE')
-            count=con.execute('''UPDATE gpu_leases SET pid=?
-                                 WHERE device_id=? AND job_id=? AND status='RESERVED' AND pid IS NULL''',
-                              (pid,device_id,job_id)).rowcount
+            count = con.execute('''UPDATE gpu_leases SET pid=?,process_started_ns=?
+                                 WHERE device_id=? AND job_id=?
+                                   AND status='RESERVED'
+                                   AND pid IS NULL AND process_started_ns IS NULL''',
+                                (pid,start_time_ns,device_id,job_id)).rowcount
         return count == 1
 
     def release(self, device_id: str, job_id: str,
-                *, process_ended: Callable[[str,int],bool] | None = None) -> GpuLease:
+                *, process_ended: Callable[[str,ProcessStatus],ProcessStatus] | None = None) -> GpuLease:
         with self._db() as con:
             con.execute('BEGIN IMMEDIATE')
-            row=con.execute('''SELECT pid,status FROM gpu_leases WHERE device_id=? AND job_id=?''',
+            row=con.execute('''SELECT pid,process_started_ns,status
+                               FROM gpu_leases WHERE device_id=? AND job_id=?''',
                             (device_id,job_id)).fetchone()
-            if row is None or row[1] != 'RESERVED' or type(row[0]) is not int:
+            if (row is None or row[2] != 'RESERVED'
+                    or type(row[0]) is not int or type(row[1]) is not int):
                 return GpuLease('BLOCKED_UNRECONCILED')
+            pid, start_time_ns, _ = row
+            identity=ProcessStatus(device_id,pid,start_time_ns,'UNKNOWN')
             try:
-                ended = process_ended is not None and process_ended(device_id,row[0]) is True
+                observed = process_ended(device_id,identity) if process_ended is not None else None
             except Exception:
-                ended = False
-            if not ended:
+                observed = None
+            if (type(observed) is not ProcessStatus or
+                    observed.device_id != device_id or observed.pid != pid or
+                    observed.start_time_ns != start_time_ns or observed.state != 'EXITED'):
                 return GpuLease('BLOCKED_UNRECONCILED')
-            con.execute('''UPDATE gpu_leases SET status='RELEASED'
-                           WHERE device_id=? AND job_id=? AND status='RESERVED' ''',
-                        (device_id,job_id))
-        return GpuLease('RELEASED',device_id,job_id,pid=row[0])
+            changed = con.execute('''UPDATE gpu_leases SET status='RELEASED'
+                                     WHERE device_id=? AND job_id=? AND status='RESERVED'
+                                       AND pid=? AND process_started_ns=?''',
+                                  (device_id,job_id,pid,start_time_ns)).rowcount
+            if changed != 1:
+                return GpuLease('BLOCKED_UNRECONCILED')
+        return GpuLease('RELEASED',device_id,job_id,pid=pid,process_started_ns=start_time_ns)
