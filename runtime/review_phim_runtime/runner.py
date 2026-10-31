@@ -13,9 +13,11 @@ class AdapterResult:
 
 
 class SafeRunner:
-    def __init__(self, executable_allowlist: Mapping[str, str], launcher: Callable):
+    def __init__(self, executable_allowlist: Mapping[str, str], launcher: Callable,
+                 arg_validator: Callable[[str, WorkItem, list[str]], bool] | None = None):
         self._executables = dict(executable_allowlist)
         self._launcher = launcher
+        self._arg_validator = arg_validator
         self._inflight: set[str] = set()
 
     def run(self, tool: str, item: WorkItem, args: list[str], grant: ApprovalScope,
@@ -25,6 +27,8 @@ class SafeRunner:
             return AdapterResult(gate.reason)
         if tool not in self._executables:
             return AdapterResult('BLOCKED_EXECUTABLE')
+        if (self._arg_validator is None or not self._arg_validator(tool,item,args)):
+            return AdapterResult('BLOCKED_ARGUMENTS')
         if item.idempotency_key in self._inflight:
             return AdapterResult('BLOCKED_INDETERMINATE')
         self._inflight.add(item.idempotency_key)
