@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from concurrent.futures import ThreadPoolExecutor
 from tempfile import TemporaryDirectory
 from pathlib import Path
-from review_phim_runtime.gpu_lease_store import DurableGpuLeaseStore
+from review_phim_runtime.gpu_lease_store import DurableGpuLeaseStore, ProcessStatus
 
 NOW=datetime(2026,10,31,5,0,tzinfo=timezone.utc)
 @dataclass(frozen=True)
@@ -49,9 +49,11 @@ class LeaseTests(unittest.TestCase):
         self.assertEqual(self.db.get('dev-A','j1').status,'RESERVED')
     def test_verified_process_completion_can_release(self):
         self.claim()
-        self.assertTrue(self.db.bind_pid('dev-A','j1',2345))
-        self.assertEqual(self.db.release('dev-A','j1',process_ended=lambda dev,pid: False).status,'BLOCKED_UNRECONCILED')
-        self.assertEqual(self.db.release('dev-A','j1',process_ended=lambda dev,pid: (dev,pid)==('dev-A',2345)).status,'RELEASED')
+        self.assertTrue(self.db.bind_process_identity('dev-A','j1',2345,1730000000000000000))
+        checker = lambda device, identity: ProcessStatus(device,identity.pid,identity.start_time_ns,'RUNNING')
+        self.assertEqual(self.db.release('dev-A','j1',process_ended=checker).status,'BLOCKED_UNRECONCILED')
+        checker = lambda device, identity: ProcessStatus(device,identity.pid,identity.start_time_ns,'EXITED')
+        self.assertEqual(self.db.release('dev-A','j1',process_ended=checker).status,'RELEASED')
         self.assertEqual(self.claim(job='j2').status,'RESERVED')
     def test_reservation_survives_restart_and_idempotency(self):
         self.claim()
