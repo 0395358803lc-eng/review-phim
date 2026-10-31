@@ -1,0 +1,38 @@
+name: Runtime foundation (synthetic only)
+
+on:
+  pull_request:
+    paths:
+      - 'runtime/**'
+      - '.github/workflows/runtime-foundation-tests.yml'
+  push:
+    branches:
+      - 'feat/balanced-cpu-gpu-runtime-20261031'
+    paths:
+      - 'runtime/**'
+      - '.github/workflows/runtime-foundation-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    name: Synthetic runtime tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    timeout-minutes: 10
+    env:
+      PYTHONPATH: runtime
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Python syntax checks
+        run: python -m compileall -q runtime/review_phim_runtime
+      - name: Unit tests (no video or GPU)
+        run: python -W error::ResourceWarning -m unittest discover -s runtime/tests -v
