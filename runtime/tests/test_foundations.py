@@ -66,7 +66,7 @@ class RunnerTests(unittest.TestCase):
         def launch(argv,**kwargs):
             calls.append((argv,kwargs))
             return dict(returncode=0,stdout='ok',stderr='')
-        runner=SafeRunner({'ffprobe':r'C:\tools\ffprobe.exe'},launch)
+        runner=SafeRunner({'ffprobe':r'C:\tools\ffprobe.exe'},launch,arg_validator=lambda tool,item,args: item.path in args)
         item=dataclasses.replace(self.item,path=r'D:\films\one;evil.mp4')
         result=runner.run('ffprobe',item,['-v','error',item.path],self.scope,now=NOW,resolver=lambda s:s)
         self.assertEqual(result.status,'TECHNICAL_PASS')
@@ -77,10 +77,16 @@ class RunnerTests(unittest.TestCase):
         def timeout(*args,**kw):
             calls.append(True)
             raise TimeoutError()
-        runner=SafeRunner({'ffprobe':r'C:\tools\ffprobe.exe'},timeout)
+        runner=SafeRunner({'ffprobe':r'C:\tools\ffprobe.exe'},timeout,arg_validator=lambda tool,item,args: True)
         self.assertEqual(runner.run('ffprobe',self.item,[],self.scope,now=NOW,resolver=lambda s:s).status,'BLOCKED_INDETERMINATE')
         self.assertEqual(runner.run('ffprobe',self.item,[],self.scope,now=NOW,resolver=lambda s:s).status,'BLOCKED_INDETERMINATE')
         self.assertEqual(len(calls),1)
+    def test_no_approved_argument_policy_blocks(self):
+        runner=SafeRunner({'ffprobe':r'C:\tools\ffprobe.exe'},lambda *args,**kwargs: self.fail('Must not execute'))
+        self.assertEqual(runner.run('ffprobe',self.item,[],self.scope,now=NOW,resolver=lambda s:s).status,'BLOCKED_ARGUMENTS')
+    def test_argument_policy_rejects_unapproved_target(self):
+        runner=SafeRunner({'ffprobe':r'C:\tools\ffprobe.exe'},lambda *args,**kwargs: self.fail('Must not execute'),arg_validator=lambda tool,item,args: item.path in args)
+        self.assertEqual(runner.run('ffprobe',self.item,['other.mp4'],self.scope,now=NOW,resolver=lambda s:s).status,'BLOCKED_ARGUMENTS')
     def test_not_allowlisted_blocks(self):
         runner=SafeRunner({},lambda *args,**kwargs: self.fail('Must not execute'))
         self.assertEqual(runner.run('powershell',self.item,[],self.scope,now=NOW,resolver=lambda s:s).status,'BLOCKED_EXECUTABLE')
