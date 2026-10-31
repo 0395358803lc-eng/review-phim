@@ -1,6 +1,7 @@
 """In-memory admission prototype; not persistent and not a host daemon."""
 from dataclasses import dataclass
 import math
+from datetime import datetime
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,43 @@ class BalancedScheduler:
         lease=ResourceLease(job_id,gpu_mib,cpu_workers,heavy_gpu)
         self._leases[job_id]=lease
         return lease
+
+    def acquire_measured(self, job_id: str, gpu_mib: int, cpu_workers: int,
+                         heavy_gpu: bool, *, telemetry, device_id: str,
+                         now: datetime) -> ResourceLease | None:
+        """Admit against a *fresh*, validated host sample; never extrapolate missing telemetry.
+
+        Telemetry is obtained by an explicitly approved G0 adapter. Reservations
+        are in memory only and are NOT cross-process or crash-safe.
+        """
+        try:
+            if not device_id or telemetry.device_id != device_id:
+                return None
+            observed = telemetry.observed_at
+            if (not isinstance(now, datetime) or not isinstance(observed, datetime)
+                    or not now.tzinfo or not observed.tzinfo):
+                return None
+            age = (now-observed).total_seconds()
+            if not 0 <= age <= 10:
+                return None
+            c, g = telemetry.cpu_utilization_pct, telemetry.gpu_utilization_pct
+            if (c is None or g is None or not all(math.isfinite(x) and 0 <= x <= 100 for x in (c, g))):
+                return None
+            total, free, processors = telemetry.vram_total_mib, telemetry.vram_free_mib, telemetry.logical_processors
+            if (not all(type(x) is int for x in (total,free,processors))
+                    or total <= 0 or free < 0 or free > total or processors <= 4
+                    or not telemetry.gpu_name):
+                return None
+            if gpu_mib > 0 and heavy_gpu and g >= 90:
+                return None
+            # CPU headroom is a soft estimate, not a guarantee of physical core isolation.
+            headroom = max(0, math.floor(processors * (100 - c) / 100))
+            if cpu_workers + sum(x.cpu_workers for x in self._leases.values()) > headroom:
+                return None
+            return self.acquire(job_id, gpu_mib, cpu_workers, heavy_gpu,
+                                ResourceSnapshot(total,free,processors))
+        except (TypeError, ValueError, OverflowError, AttributeError):
+            return None
 
     def release(self, job_id: str) -> None:
         self._leases.pop(job_id,None)
