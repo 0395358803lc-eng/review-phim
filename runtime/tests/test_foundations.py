@@ -5,6 +5,9 @@ from review_phim_runtime.contracts import (NICHE_IDS, STAGES, SourceInterval, Fa
                                            WorkItem, HostInventory, Capability)
 from review_phim_runtime.scope import ApprovalScope, validate_scope
 from review_phim_runtime.runner import SafeRunner
+from review_phim_runtime.journal import OperationJournal
+from tempfile import TemporaryDirectory
+from pathlib import Path
 from review_phim_runtime.registry import resolve_capabilities
 from review_phim_runtime.scheduler import BalancedScheduler, ResourceSnapshot, retry_after_oom
 
@@ -60,13 +63,15 @@ class ScopeTests(unittest.TestCase):
 class RunnerTests(unittest.TestCase):
     def setUp(self):
         self.item=WorkItem('dev','job',r'D:\films\one.mp4','PROBE',SourceInterval(0,1),100,'one')
-        self.scope=ApprovalScope('dev','job',r'D:\films',frozenset({'PROBE'}),SourceInterval(0,2),1000,NOW+dt.timedelta(hours=1))
+        self.scope=ApprovalScope('dev','job',r'D:\films',frozenset({'PROBE'}),SourceInterval(0,2),1000,NOW+dt.timedelta(hours=1),scope_id='scope')
+        self.tmp=TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
+        self.journal=OperationJournal(str(Path(self.tmp.name)/'test.db'))
     def test_argument_injection_not_interpreted(self):
         calls=[]
         def launch(argv,**kwargs):
             calls.append((argv,kwargs))
-            return dict(returncode=0,stdout='ok',stderr='')
-        runner=SafeRunner({'ffprobe':r'C:\tools\ffprobe.exe'},launch,arg_validator=lambda tool,item,args: item.path in args)
+            return dict(pid=9988,returncode=0,stdout='ok',stderr='')
+        runner=SafeRunner({'ffprobe':r'C:\tools\ffprobe.exe'},launch,arg_validator=lambda tool,item,args: item.path in args,journal=self.journal)
         item=dataclasses.replace(self.item,path=r'D:\films\one;evil.mp4')
         result=runner.run('ffprobe',item,['-v','error',item.path],self.scope,now=NOW,resolver=lambda s:s)
         self.assertEqual(result.status,'TECHNICAL_PASS')
@@ -77,7 +82,7 @@ class RunnerTests(unittest.TestCase):
         def timeout(*args,**kw):
             calls.append(True)
             raise TimeoutError()
-        runner=SafeRunner({'ffprobe':r'C:\tools\ffprobe.exe'},timeout,arg_validator=lambda tool,item,args: True)
+        runner=SafeRunner({'ffprobe':r'C:\tools\ffprobe.exe'},timeout,arg_validator=lambda tool,item,args: True,journal=self.journal)
         self.assertEqual(runner.run('ffprobe',self.item,[],self.scope,now=NOW,resolver=lambda s:s).status,'BLOCKED_INDETERMINATE')
         self.assertEqual(runner.run('ffprobe',self.item,[],self.scope,now=NOW,resolver=lambda s:s).status,'BLOCKED_INDETERMINATE')
         self.assertEqual(len(calls),1)
