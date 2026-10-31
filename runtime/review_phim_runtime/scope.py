@@ -15,6 +15,7 @@ class ApprovalScope:
     interval: SourceInterval
     max_bytes: int
     expires_at: datetime
+    scope_id: str = ''
 
 
 @dataclass(frozen=True)
@@ -26,6 +27,9 @@ class ScopeDecision:
 def _windows_under(path: str, root: str) -> bool:
     path, root = ntpath.normcase(ntpath.normpath(path)), ntpath.normcase(ntpath.normpath(root))
     try:
+        path_drive, root_drive = ntpath.splitdrive(path)[0], ntpath.splitdrive(root)[0]
+        if not (len(path_drive) == 2 and len(root_drive) == 2 and path_drive[1] == root_drive[1] == ":" and path_drive[0].isalpha() and root_drive[0].isalpha()):
+            return False
         return ntpath.isabs(path) and ntpath.isabs(root) and ntpath.commonpath([path, root]) == root
     except ValueError:
         return False
