@@ -60,3 +60,11 @@ Người dùng duyệt review trước toàn bộ lời đọc; duyệt giọng 
 - Không tự gán “100% khớp hình”, không coi điểm embedding hoặc caption AI là chứng cứ tuyệt đối.
 
 **Yêu cầu runtime:** Python 3.10+ cho script hỗ trợ; `ffprobe`/`ffmpeg` và AI model là phụ thuộc ngoài chỉ khi muốn thực thi các công đoạn. Các schema dùng JSON Schema 2020-12. Chưa có giấy phép tái phân phối công khai được chỉ định; trước khi public, chủ sở hữu cần chọn LICENSE thích hợp.
+
+## Execution Engine 2.1 — isolated development preview
+
+An optional, **not yet production-complete** execution core is available in
+[`engine21/`](engine21/) and documented in [ENGINE21.md](ENGINE21.md). It introduces
+bounded subprocess adapters, signed-approval verification, fresh source/artifact
+checks and crash recovery without changing any of the existing 11 Agent Skills.
+Real AI model adapters and full-movie acceptance testing are future work.
