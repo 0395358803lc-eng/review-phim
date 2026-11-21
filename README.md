@@ -76,3 +76,7 @@ See [PHASE3.md](PHASE3.md) and [Windows synthetic QA](docs/qa/phase3-windows-202
 ## Phase 4 — evidence-grounded narration and unsigned approvals (Draft)
 
 See [PHASE4.md](PHASE4.md) and the [Windows acceptance report](docs/qa/phase4-grounded-review-2026-11-22.md). This adds a portable multi-event, source-SHA-bound extractive draft engine, a model-proposal quarantine, exact claim-to-shot provenance checks, and unsigned external-approval request preparation. Synthetic Engine21 QA with existing local AI models passes; **full-film autonomous story writing and genuine human approval are not certified.**
+
+## Phase 5 — Source-locked bilingual evidence and CLIP → Qwen verification (Draft)
+
+See [PHASE5.md](PHASE5.md) and [sanitized Fatman QA](docs/qa/phase5-fatman-2026-11-22.md). Source-bound EN→VI candidates, Qwen verification of exact N05 visual claims after CLIP and multi-sentence storyboard planning are tested. Real-film narrator/pilot remain unapproved; no movie/media/model weights are packaged.

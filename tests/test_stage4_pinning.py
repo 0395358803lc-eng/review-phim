@@ -11,6 +11,7 @@ class RuntimePins(unittest.TestCase):
         worker=ROOT/"qa"/"legacy_offline_worker.py"
         paths=pinned_code_inputs(ROOT,worker)
         expected=[worker,*sorted((ROOT/"stage4").glob("*.py")),
+            *sorted((ROOT/"stage5").glob("*.py")),
             ROOT/"skills"/"film-review-orchestrator"/"scripts"/"evidence_qc.py"]
         self.assertEqual(set(paths),{str(p.resolve(strict=True)) for p in expected})
         for p in expected:

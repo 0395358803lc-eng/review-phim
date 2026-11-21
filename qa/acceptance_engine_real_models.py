@@ -33,13 +33,19 @@ MODELS={
 }
 
 def pinned_code_inputs(repo_root:Path,worker:Path)->dict[str,str]:
-    """Pin worker and ALL directly imported Stage4/semantic QC code by SHA."""
+    """Pin worker plus all loaded Stage4/Stage5 and semantic QC code by SHA."""
     base=Path(repo_root).resolve(strict=True)
     deps=[Path(worker),*sorted((base/"stage4").glob("*.py")),
+          *sorted((base/"stage5").glob("*.py")),
           base/"skills"/"film-review-orchestrator"/"scripts"/"evidence_qc.py"]
     if len(deps)<4:
         raise ValueError("Stage4 worker dependencies missing; refuse unpinned worker")
     return {str(p.resolve(strict=True)):sha256(p.resolve(strict=True)) for p in deps}
+
+def extra_model_sha_files(stage:str)->list[str]:
+    """N07 is a CLIP+Qwen verifier; host must pin both local weight blobs."""
+    return ["embeddings/clip-vit-base-patch32/pytorch_model.bin",
+            "vision/qwen3-vl-2b-instruct/model.safetensors"] if stage=="N07" else []
 
 def check(test,reason):
     if not test:raise AssertionError(reason)
@@ -77,7 +83,7 @@ def main():
     parser.add_argument("--voice-sample",type=Path,required=True)
     args=parser.parse_args()
     root=args.qa_root.resolve(strict=True)
-    check(root.name=="__FRA_PHASE4_NARRATIVE_20261122","QA root must be the preauthorized isolated Phase4 workspace")
+    check(root.name=="__FRA_PHASE5_FATMAN_20261122","QA root must be the preauthorized isolated Phase5 workspace")
     legacy=args.legacy_root.resolve(strict=True)
     models=legacy/"models"
     source=args.source.resolve(strict=True)
@@ -111,6 +117,10 @@ def main():
                 weight=models/weightrel
                 if not weight.is_file():raise FileNotFoundError("Model weight absent "+weightrel)
                 files[str(weight)]=sha256(weight)
+            for extra_rel in extra_model_sha_files(stage):
+                extra=models/extra_rel
+                if not extra.is_file():raise FileNotFoundError("Required N07 second model weight absent "+extra_rel)
+                files[str(extra)]=sha256(extra)
             conf={"schema_version":"3.0","stages":{
               stage:{"executable":str(exe),"argv":["-B",str(worker),
                        "--stage",stage,"--models-root",str(models)],
