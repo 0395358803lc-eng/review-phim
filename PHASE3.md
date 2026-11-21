@@ -44,3 +44,7 @@ The production example config in examples/phase3-providers.example.json intentio
 System Python 3.13.15 lacks faster-whisper, Whisper, OpenCLIP, Transformers, PyTorch, qwen_vl_utils and PySceneDetect. A separate already installed VieNeu TTS Python 3.11.18 venv has vieneu, torch and transformers, but no user-approved local voice model checkpoint/profile or production worker has been configured. NVIDIA RTX 4060 has 8188 MiB VRAM; model fit must be tested separately.
 
 Synthetic approval receipts are test-only, not human consent. Synthetic transcript and review are labeled as fixtures; no actual film story/actor/action matching was performed. Production connectors remain pending separately scoped installation/configuration approvals.
+
+## Existing local model acceptance (2026-11-22)
+
+Real local Whisper, CLIP, Qwen3-VL and VieNeu models were smoke-tested on isolated synthetic content using preinstalled legacy weights and environments; a short cross-modal evidence-linked review render was independently checked. See [dated local-model acceptance report](docs/qa/local-models-2026-11-22.md) and [the QA evidence bridge](qa/local_model_bridge.py). This is not production-model orchestration or an approved real-film review; no old model weights, generated media or transcripts are bundled.
