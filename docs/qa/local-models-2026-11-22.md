@@ -60,3 +60,59 @@ Local output folder: qc/linked_real_models_v1/ beneath the NEW isolated QA direc
 - Independent evidence_qc sentence-shot map check: PASS (exit 0); FFprobe: MPEG-4 video and AAC audio, duration **2.960000 seconds**, 56184 bytes; FFmpeg full -xerror decode: exit 0.
 - Clean source export containing **65 source files**: release validator PASS (no bundled media/weights/user data), git diff --check exit 0.
 - Legacy model acceptance was conducted separately from the synthetic Engine 2.1 N00–N09 adapter acceptance. It does not change any signed approval gate or certify real-film semantics.
+
+
+## 6. Additional Engine 2.1 real-worker integration acceptance
+
+This goes beyond independent provider smoke tests. New QA-only host workers run the existing local model installations **through the Engine 2.1 controlled stage runner** on a newly generated 2.96-second synthetic source. No full-length real movie was used.
+
+### First attempt: reproduced and fixed Windows offline-cache bug
+
+The first real-worker Engine run reached DONE for N00 through N05 (real Whisper at N02, real Qwen3-VL at N03), then N06 failed. The TTS stderr showed WinError 206 because Engine21's subprocess environment allowlist had stripped HF_HOME, so the model cache resolved under a too-long relative "~/.cache" path inside an attempt directory.
+
+A new red/green regression test now verifies a restricted helper in engine21/runner.py:
+- Passes only explicitly permitted offline model environment values including HF_HOME, HF_HUB_OFFLINE, TRANSFORMERS_OFFLINE and TORCH_HOME.
+- Rejects unrelated environment variables/secrets.
+- Does not modify system PATH or global environment configuration.
+
+The first FAILED job remains untouched under the isolated QA root for audit. A completely fresh job was used after the fix.
+
+### Second attempt: genuine N00–N09 Engine run
+
+**Outcome:** Engine21 real-local-model synthetic acceptance **PASS, 13 of 13 CLI checks as expected** (init, ten N00–N09 stages and two intentionally rejected approval-free calls), with **10 of 10 actual stages DONE** in independently read-back Engine state.
+
+| Stage | Actual worker | Observed runtime |
+| --- | --- | --- |
+| N00 | FFmpeg probe and decode | 0.32s |
+| N01 | FFmpeg scene timestamp index | 0.28s |
+| N02 | Faster-Whisper large-v3-turbo on CUDA | 3.65s |
+| N03 | Qwen3-VL 2B on CUDA | 9.77s |
+| N04 | Deterministic evidence-linked story memory, NOT LLM understanding | 0.43s |
+| N05 | Deterministic visual facts review, NOT freeform creative writing | 0.32s |
+| N06 | VieNeu v3 Turbo on CUDA, test-only preset | 7.97s |
+| N07 | CLIP ViT-B/32 on CUDA using actual Qwen caption | 5.18s |
+| N08 | Host-signed TEST-only pilot hash, guarded delivery | 0.48s |
+| N09 | FFmpeg final verification/manifest | 0.43s |
+
+The Engine N06 and N08 checks **without any approval receipts** both failed closed with exit 2; test-only HMAC receipts allowed QA stage completion, but **are NOT user approvals**.
+
+Production provider configuration inputs pin SHA256 of executables, QA worker script and relevant local model weight files, with each stage checked separately; source is SHA-locked by Engine21.
+
+Independent verification:
+- Engine state: **10/10 DONE** before any user-media-related operations (there are none).
+- N07 evidence map checker: exit **0**, source ranges and visual claim evidence linked.
+- Final MP4: **2.916667s**, **55,808 bytes**, MPEG-4 video + AAC audio.
+- Independent FFprobe and full FFmpeg -xerror decode: **exit 0**.
+- Final SHA256: **d68601c197f6b93879b4943950933dffb345b79e2325901b09b65675bd23184e**.
+
+Local detailed result: runs/real-engine-06880b29c6/report.json inside the new isolated QA root; generated media and test-only keys remain there and are **NOT uploaded to GitHub**.
+
+### Remaining acceptance boundaries
+
+- N04 and N05 are rule-based assembly from the two actual model evidence streams, not autonomous film-plot creative review.
+- The host HMAC signer is QA-only; production signing must run under a trusted separate identity/OS permission boundary.
+- Workers and runtime are not a hardened OS sandbox. Filenames, external model versions, artifact SHA and configured provider scripts are checked, but real film data and unknown-length workloads require additional isolation/capacity testing.
+- Real movie footage and original transcripts were absent from the authorized legacy workspace. Full-movie content correctness, actor/plot continuity and professional edit review are NOT verified.
+- The specific old voice preset still requires project-specific authorization before actual production.
+
+**Final technical verdict:** Four real local models + actual Engine21 N00–N09 subprocess orchestration **PASS on synthetic QA**, production full-film certification **NOT AVAILABLE** from the supplied legacy data alone.

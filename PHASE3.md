@@ -48,3 +48,7 @@ Synthetic approval receipts are test-only, not human consent. Synthetic transcri
 ## Existing local model acceptance (2026-11-22)
 
 Real local Whisper, CLIP, Qwen3-VL and VieNeu models were smoke-tested on isolated synthetic content using preinstalled legacy weights and environments; a short cross-modal evidence-linked review render was independently checked. See [dated local-model acceptance report](docs/qa/local-models-2026-11-22.md) and [the QA evidence bridge](qa/local_model_bridge.py). This is not production-model orchestration or an approved real-film review; no old model weights, generated media or transcripts are bundled.
+
+### Additional Engine-driven offline QA
+
+A second test now drives N00-N09 directly through Engine21 using QA-only local model workers in [qa/legacy_offline_worker.py](qa/legacy_offline_worker.py) and [qa/acceptance_engine_real_models.py](qa/acceptance_engine_real_models.py). It uses synthetic media, preinstalled offline Whisper/Qwen/CLIP/VieNeu and test-only approvals. **N04/N05 are deterministic evidence assembly, not film-story generation.** A restricted offline-cache environment pass-through fixes Windows HF_HOME propagation without exposing unrelated secrets. See the [QA report](docs/qa/local-models-2026-11-22.md). Production real-film suitability and a separately trusted human-approval signer remain unverified.
