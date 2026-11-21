@@ -72,3 +72,7 @@ Real AI model adapters and full-movie acceptance testing are future work.
 ## Phase 3 — local adapter integration (development preview)
 
 See [PHASE3.md](PHASE3.md) and [Windows synthetic QA](docs/qa/phase3-windows-2026-11-22.md). The new stage3 adapter provides real FFmpeg intake, scene indexing and MP4 rendering plus strict optional AI-provider contracts. System Python on the QA machine does not contain Whisper, CLIP or Qwen3-VL models; VieNeu TTS is only detected in a separate environment, not used for real synthesis. **Synthetic QA PASS never equals real-film or real-model acceptance.** No original Agent Skills are modified.
+
+## Phase 4 — evidence-grounded narration and unsigned approvals (Draft)
+
+See [PHASE4.md](PHASE4.md) and the [Windows acceptance report](docs/qa/phase4-grounded-review-2026-11-22.md). This adds a portable multi-event, source-SHA-bound extractive draft engine, a model-proposal quarantine, exact claim-to-shot provenance checks, and unsigned external-approval request preparation. Synthetic Engine21 QA with existing local AI models passes; **full-film autonomous story writing and genuine human approval are not certified.**

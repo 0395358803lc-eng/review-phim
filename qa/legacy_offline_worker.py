@@ -174,36 +174,40 @@ def _n03(ctx:WorkerContext,models:Path)->str:
     return "local-Qwen3-VL-2B-Instruct-CUDA"
 
 def _n04(ctx:WorkerContext)->str:
-    lines=[json.loads(x) for x in prior(ctx,"N02","transcript_vi.jsonl").read_text(encoding="utf8").splitlines()]
-    visions=[json.loads(x) for x in prior(ctx,"N03","visual_observations.jsonl").read_text(encoding="utf8").splitlines()]
-    if not lines or not visions:raise ValueError("Story memory needs speech and vision evidence")
-    story={"source_sha256":ctx.source_sha256,"input_synthetic":True,
-           "chapters":[{"event_id":"EV001","visual":visions[0]["description"],
-                        "spoken":lines[0]["text"],
-                        "visual_evidence_id":visions[0]["id"],
-                        "speech_evidence_id":lines[0]["id"],
-                        "human_review_required":True}]}
+    from stage4.evidence import build_timeline
+    lines=[json.loads(x) for x in prior(ctx,"N02","transcript_vi.jsonl").read_text(encoding="utf8").splitlines() if x.strip()]
+    visions=[json.loads(x) for x in prior(ctx,"N03","visual_observations.jsonl").read_text(encoding="utf8").splitlines() if x.strip()]
+    duration=_media(ctx.source)["duration_s"]
+    story=build_timeline(lines,visions,ctx.source_sha256,duration)
+    story["input_synthetic"]=True
     emit(ctx,"story_timeline.json",story)
-    emit(ctx,"event_claims.jsonl",[{"event_id":"EV001","source_evidence_ids":[visions[0]["id"],lines[0]["id"]],
-      "verdict":"CONTEXT_ONLY","synthetic_source":True}],jsonl=True)
-    emit(ctx,"unresolved.jsonl",[{"reason":"No actual plot or character inference",
-      "needs_human_review":True}],jsonl=True)
-    return "rule-based-evidence-merger-not-generative-LLM"
+    claims=[{"event_id":e["event_id"],"source_evidence_ids":
+         e["visual_evidence_ids"]+e["asr_evidence_ids"],
+         "source_sha256":ctx.source_sha256,"verdict":"CONTEXT_ONLY",
+         "conflicting_visuals":e["visual_conflict"],"synthetic_source":True}
+        for e in story["events"]]
+    emit(ctx,"event_claims.jsonl",claims,jsonl=True)
+    limits=story["unresolved"] or [{"reason":"Model visual/ASR evidence is not independently human-approved",
+                                    "needs_human_review":True}]
+    emit(ctx,"unresolved.jsonl",limits,jsonl=True)
+    return "stage4-multi-event-grounded-catalog-NOT-creative-LLM"
 
 def _n05(ctx:WorkerContext)->str:
+    from stage4.review import build_review
     story=json.loads(prior(ctx,"N04","story_timeline.json").read_text(encoding="utf8"))
-    vision=story["chapters"][0]["visual"].lower()
-    if not all(x in vision for x in ("red","blue","square","circle")):
-        raise ValueError("Qwen visual facts do not match known synthetic shape fixture")
-    review="Trong cảnh thử nghiệm có một hình vuông đỏ và một hình tròn xanh."
-    text_output(ctx,"review_final.txt",review+"\n")
-    claims=[{"claim_id":"C001","text":"Red square and blue circle visible",
-        "evidence_ids":["VIS001"],"verdict":"VISUAL_DIRECT"}]
-    emit(ctx,"sentence_claims.jsonl",[{"sentence_id":"S0001","review_text":review,
-      "atomic_claims":claims,"synthetic_media":True}],jsonl=True)
-    emit(ctx,"evidence_ledger.jsonl",[{"claim_id":"C001","verdict":"VISUAL_DIRECT",
-      "evidence_ids":["VIS001"],"requires_human_review":True}],jsonl=True)
-    return "deterministic-grounded-synthetic-review-NOT-creative-LLM"
+    # Existing QA N06/N07 handles a single sentence: never silently claim full
+    # movie coverage. The reusable Stage4 library separately supports ALL events.
+    doc=build_review(story,max_sentences=1)
+    text_output(ctx,"review_final.txt",doc["review_text"]+"\n")
+    rows=[{"sentence_id":x["sentence_id"],"event_id":x["event_id"],
+           "review_text":x["review_text"],"atomic_claims":x["atomic_claims"],
+           "source_sha256":ctx.source_sha256,
+           "qa_truncated":doc["truncated"],
+           "human_review_required":True,
+           "synthetic_media":True} for x in doc["sentences"]]
+    emit(ctx,"sentence_claims.jsonl",rows,jsonl=True)
+    emit(ctx,"evidence_ledger.jsonl",doc["evidence_ledger"],jsonl=True)
+    return "stage4-source-extractive-qa-limited-review-NOT-creative-LLM"
 
 def _n06(ctx:WorkerContext,models:Path)->str:
     import numpy as np
@@ -260,29 +264,44 @@ def _n07(ctx:WorkerContext,models:Path)->str:
     scores=(te@em.T).flatten().cpu().tolist()
     if max(range(3),key=lambda i:scores[i])!=0:
         raise ValueError("CLIP did not retrieve source image as top candidate")
-    end=min(source_dur,voice_dur)
-    emit(ctx,"candidate_scenes.jsonl",[{"candidate_id":"VIS001",
-        "source_start_s":0,"source_end_s":end,
+    from stage4.matching import bind_sentences_to_shots
+    sys.path.insert(0,str(ROOT/"skills"/"film-review-orchestrator"/"scripts"))
+    import evidence_qc
+    story=json.loads(prior(ctx,"N04","story_timeline.json").read_text(encoding="utf8"))
+    captions=[json.loads(x) for x in prior(ctx,"N05","sentence_claims.jsonl").read_text(encoding="utf8").splitlines() if x.strip()]
+    timing=[json.loads(x) for x in prior(ctx,"N06","sentence_audio_timeline.jsonl").read_text(encoding="utf8").splitlines() if x.strip()]
+    if len(captions)!=1 or len(timing)!=1:
+        raise ValueError("QA N07 supports one sentence; do not claim long-film coverage")
+    if captions[0]["review_text"].strip()!=review:
+        raise ValueError("N05 script differs from selected sentence")
+    claims=captions[0].get("atomic_claims",[])
+    if len(claims)!=1 or len(claims[0].get("evidence_ids",[]))!=1:
+        raise ValueError("QA requires exactly one traceable claim")
+    chosen_id=claims[0]["evidence_ids"][0]
+    if claims[0]["verdict"]=="VISUAL_DIRECT" and chosen_id!=source_vision["id"]:
+        raise ValueError("N05 visual claim does not match CLIP/Qwen frame evidence")
+    doc=bind_sentences_to_shots(
+        source_sha256=ctx.source_sha256,source_duration_s=source_dur,
+        voice_duration_s=voice_dur,catalog=story["catalog"],
+        sentences=captions,voice_timeline=timing,
+        chosen={captions[0]["sentence_id"]:chosen_id})
+    problems=evidence_qc.validate_map(doc)
+    if problems:
+        raise ValueError("Engine N07 evidence/voice map invalid: "+";".join(problems))
+    slot=doc["sentences"][0]["chosen_shots"][0]
+    emit(ctx,"candidate_scenes.jsonl",[{"candidate_id":chosen_id,
+        "source_start_s":slot["source_start_s"],
+        "source_end_s":slot["source_end_s"],
         "score_raw":scores[0],"other_scores":scores[1:],
         "model":"local-CLIP-ViT-B-32","source_sha256":ctx.source_sha256,
         "synthetic_fixture":True}],jsonl=True)
-    doc={"source_movie_sha256":ctx.source_sha256,
-      "source_duration_s":source_dur,"narration_duration_s":voice_dur,
-      "sentences":[{"sentence_id":"S0001","review_text":review,
-         "voice_start_s":0.0,"voice_end_s":voice_dur,
-         "atomic_claims":[{"claim_id":"C001","text":"Visible synthetic shapes",
-            "verdict":"VISUAL_DIRECT","evidence_ids":["VIS001"]}],
-         "chosen_shots":[{"source_start_s":0.,"source_end_s":end,
-           "voice_start_s":0.,"voice_end_s":voice_dur,"verdict":"VISUAL_DIRECT",
-           "visual_evidence_ids":["VIS001"],"asr_evidence_ids":[],
-           "qualifier":"Synthetic shape image; not original movie scene"}],
-         "unresolved_claims":[]}]}
     emit(ctx,"sentence_shot_map.json",doc)
-    emit(ctx,"evidence_and_limits.jsonl",[{"sentence_id":"S0001",
+    emit(ctx,"evidence_and_limits.jsonl",[{"sentence_id":captions[0]["sentence_id"],
       "clip_raw_cosine":scores,"model_verified":True,
-      "source_visual_id":"VIS001",
-      "limitation":"Only 1 synthetic source scene; not real movie matching"}],jsonl=True)
-    return "local-CLIP-ViT-B-32-CUDA-with-Qwen-caption"
+      "source_evidence_id":chosen_id,
+      "qa_truncated":captions[0].get("qa_truncated",False),
+      "limitation":"Single-sentence synthetic QA only; no feature-length shot matching"}],jsonl=True)
+    return "local-CLIP-source-bound-matching-with-original-N05-claims"
 
 def _n08(ctx:WorkerContext)->str:
     approved=ctx.job/"edit"/"pilot.mp4"
