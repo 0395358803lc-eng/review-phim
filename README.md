@@ -68,3 +68,7 @@ An optional, **not yet production-complete** execution core is available in
 bounded subprocess adapters, signed-approval verification, fresh source/artifact
 checks and crash recovery without changing any of the existing 11 Agent Skills.
 Real AI model adapters and full-movie acceptance testing are future work.
+
+## Phase 3 — local adapter integration (development preview)
+
+See [PHASE3.md](PHASE3.md) and [Windows synthetic QA](docs/qa/phase3-windows-2026-11-22.md). The new stage3 adapter provides real FFmpeg intake, scene indexing and MP4 rendering plus strict optional AI-provider contracts. System Python on the QA machine does not contain Whisper, CLIP or Qwen3-VL models; VieNeu TTS is only detected in a separate environment, not used for real synthesis. **Synthetic QA PASS never equals real-film or real-model acceptance.** No original Agent Skills are modified.
