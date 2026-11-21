@@ -1,0 +1,13 @@
+{
+  "title": "FILM TITLE FROM USER",
+  "source_path": "ASK_USER_OR_USE_AUTHORIZED_INPUT_PATH",
+  "narration_language": "vi",
+  "review_style": "story_driven_with_evidence",
+  "target_duration_s": null,
+  "voice_profile": "ASK_OR_REUSE_SPECIFICALLY_APPROVED_PROFILE",
+  "audio_production_requires_approval": true,
+  "output_profile": {"width": null, "height": null, "fps": null, "intro": false, "music": false, "watermark": false},
+  "copyright_permission_confirmed": false,
+  "authorized_tools": [],
+  "do_not_modify_original": true
+}

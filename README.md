@@ -1,41 +1,62 @@
-# AI Video Review — Agent-Orchestrated Brain-Only
+# Film Review Agent Skills 2.0.0
 
-**BỘ TÀI LIỆU SKILL, KHÔNG PHẢI ỨNG DỤNG THỰC THI.**
+**11 Agent Skills độc lập (1 điều phối + 10 chuyên môn), không phải plugin ChatGPT.** Bộ này biến bộ phim nguyên bản thành một dự án review có thể truy vết bằng chứng, ghép cảnh theo từng ý và kiểm duyệt sản phẩm thật. Tất cả được viết mới; không đóng gói data phim, timeline hay state machine của plugin cũ.
 
-Bộ kỹ năng bằng Markdown hướng dẫn ChatGPT điều phối công cụ và model trên máy được kết nối trong tương lai để phân tích video/phim, tạo kịch bản có bằng chứng, chọn cảnh, dựng video và kiểm soát chất lượng. Phạm vi bàn giao **hiện tại chỉ là tài liệu trong GitHub**. Không yêu cầu chọn máy, cài thư viện, tải model, xử lý phim hoặc cung cấp đường dẫn video lúc này.
+## Có gì trong gói?
 
-**Trạng thái phát hành:** documentation v1.0 (chờ đánh giá sử dụng thực tế). Nội dung đã được soạn; **chưa kiểm thử agent thực hiện theo tài liệu** và chưa có kết quả render video thực tế.
+- `skills/film-review-orchestrator/SKILL.md` — chọn giai đoạn N00–N09, xác định phụ thuộc, ghi tiến độ, phục hồi công việc, khóa nguồn.
+- `skills/film-intake` — kiểm nguồn; `scene-indexing` — chia cảnh; `speech-analysis` — ASR và dịch; `visual-analysis` — xem chuyển động.
+- `skills/story-memory` — mạch chuyện có chứng cứ; `review-writing` — lời bình; `voice-production` — TTS/timestamp; `semantic-matching` — tìm/kiểm shot.
+- `skills/video-editing` — dựng; `quality-delivery` — QC độc lập và bàn giao.
+- Bên trong skill điều phối có `references/`, `schemas/`, `templates/` và `scripts/jobctl.py`, `scripts/evidence_qc.py` dùng **Python standard library**, không cần cài package AI để quản lý job.
+- `tests/` và `scripts/validate_release.py` chỉ dùng khi kiểm gói nguồn; có thể không cài cùng skills vào môi trường agent.
 
-## Hardware-First: quy tắc bắt buộc trước khi đề xuất cài đặt
-Khi xử lý video trên máy thực, ChatGPT phải **kết nối đúng máy → kiểm kê READ_ONLY CPU/RAM/GPU/VRAM/driver/OS/ổ cứng và phần mềm/model đã cài → đánh giá tương thích theo nhu cầu → đề xuất danh sách công cụ còn thiếu → xin duyệt → mới cài và chạy thử**. TOOL-REGISTRY.md chỉ là catalog, không phải gói cài mặc định. Không có inventory thì không được cá nhân hóa danh sách cài đặt. Xem [Hardware-First Selection](docs/HARDWARE-FIRST-SELECTION.md).
+## Cài nhanh — sao chép thư mục skills
 
-## Bắt đầu đọc
-1. [SKILL.md](SKILL.md) — entrypoint agent, điều kiện kích hoạt, quy tắc và dẫn đến tài liệu chuyên sâu.
-2. [docs/DOCUMENTATION-SCOPE.md](docs/DOCUMENTATION-SCOPE.md) — định nghĩa phạm vi bộ tài liệu và những gì chưa được làm.
-3. [docs/USAGE-GUIDE.md](docs/USAGE-GUIDE.md) — nạp skill vào môi trường agent trong tương lai và quy trình sử dụng.
-4. [ORCHESTRATION.md](ORCHESTRATION.md) — state machine, quality gates, recovery.
-5. [docs/AGENT-INSTRUCTIONS.md](docs/AGENT-INSTRUCTIONS.md) — playbook/prompt dùng lại cho từng pha khi agent được cấp quyền.
-6. [docs/ARTIFACT-CONTRACTS.md](docs/ARTIFACT-CONTRACTS.md) — nối dữ liệu giữa các khâu và danh sách output.
-7. [docs/DOCUMENTATION-VALIDATION.md](docs/DOCUMENTATION-VALIDATION.md) — kịch bản tự kiểm tra tài liệu, chưa thay thế kiểm thử thực tế.
+Xem [INSTALL.md](INSTALL.md) cho Windows và Linux/macOS. Ví dụ cài phạm vi một project trên Linux/macOS:
 
-## Cấu trúc bộ não
-- [ARCHITECTURE.md](ARCHITECTURE.md) — các lớp điều phối / remote actions / local tools / dữ liệu bằng chứng.
-- [TOOL-REGISTRY.md](TOOL-REGISTRY.md) — danh mục công cụ và nguyên tắc chọn, **không khẳng định đã cài**.
-- [ENVIRONMENT-POLICY.md](ENVIRONMENT-POLICY.md) — phạm vi và quyền vận hành, khi được người dùng cho phép trong tương lai.
-- [agents/](agents/) — 9 vai trò chuyên môn (ingest, audio, visual, narrative, script, clip retrieval, voice, editing, QC).
-- [workflows/](workflows/) — movie-review, recap, ending-explained, generic-video-review, YouTube 16:9, Shorts/TikTok 9:16.
-- [schemas/](schemas/) — hợp đồng dữ liệu, các mẫu JSON **giả lập**.
-- [policies/](policies/) — evidence validation, bản quyền, GPU, lỗi và remote security.
-- [tests/](tests/) — các tình huống cần chạy khi có môi trường thực, **không phải kết quả đã PASS**.
-- [docs/IMPLEMENTATION-ROADMAP.md](docs/IMPLEMENTATION-ROADMAP.md) — lộ trình tài liệu và hướng dẫn triển khai tương lai.
+```bash
+mkdir -p .agents/skills
+cp -R skills/* .agents/skills/
+```
 
-## Nguyên tắc cốt lõi
-**Evidence-first:** lời kể dựa trên timestamp, scene IDs, transcript và video frames; không bịa hành động. **Local-first:** ưu tiên tool/model cục bộ khi thực thi về sau, không tự upload media. **Brain-only:** Markdown là hướng dẫn, không có tiến trình hay model tự chạy. **Quality-gated:** kết quả chỉ PASS khi có kiểm chứng, quyền sử dụng và phê duyệt phù hợp. **No publish:** xuất bản là quyền riêng.
+Ví dụ trên Windows PowerShell, thực hiện **từ thư mục đã giải nén ZIP**:
 
-## Nguồn
-Thiết kế dựa trên báo cáo người dùng cung cấp `deep-research-report.md` (391 dòng); không đăng bản báo cáo gốc lên kho public. Đối chiếu theo [docs/RESEARCH-TRACEABILITY.md](docs/RESEARCH-TRACEABILITY.md). Các cách triển khai bổ sung được phân biệt với nội dung báo cáo.
+```powershell
+New-Item -ItemType Directory -Force -Path .agents\skills | Out-Null
+Copy-Item -Path .\skills\* -Destination .\.agents\skills\ -Recurse -Force
+```
 
-## Documentation validation and plugin packaging
-- Run `python -m unittest discover -s tests -p 'test_validate_docs.py' -v` and `python scripts/validate_docs.py` (Python standard library only).
-- Checks cover local links, JSON example syntax and basic envelopes. They do **not** validate real video processing, plugin installation or agent behavior.
-- See [Plugin Packaging](docs/PLUGIN-PACKAGING.md) and [Evidence Bridge Contract](docs/EVIDENCE-BRIDGE-CONTRACT.md). No host/plugin permissions are implied.
+Các agent nhận diện `.agents/skills/` hoặc `~/.agents/skills/` có thể khám phá từng skill theo phần mô tả trong YAML frontmatter. Nếu nền tảng dùng thư mục khác, theo hướng dẫn của nền tảng đó. Bộ này chưa thiết lập công cụ thực thi giúp agent truy cập máy của bạn; phải cấu hình adapter và quyền truy cập riêng.
+
+## Lệnh cốt lõi (từ thư mục gói)
+
+```bash
+python skills/film-review-orchestrator/scripts/jobctl.py init \
+  --source "/authorized/path/original_movie.mp4" \
+  --workspace-root "/authorized/workspaces" \
+  --title "Tên phim"
+python skills/film-review-orchestrator/scripts/jobctl.py status --job "/authorized/workspaces/film-..."
+python skills/film-review-orchestrator/scripts/jobctl.py verify-source --job "/authorized/workspaces/film-..."
+python skills/film-review-orchestrator/scripts/evidence_qc.py \
+  --map "/authorized/workspaces/film-.../match/sentence_shot_map.json"
+```
+
+Trên Windows, thay đường dẫn nguồn/workspace bằng đường dẫn Windows của thiết bị **được cấp quyền**. `init` tạo project, hash phim, thử `ffprobe`; **không chạy ASR, vision, TTS, render video**. Media cần adapter và thực thi tương ứng; không nhầm tạo job với hoàn tất phân tích.
+
+## Điểm phê duyệt không được tự bỏ qua
+
+Người dùng duyệt review trước toàn bộ lời đọc; duyệt giọng mẫu mới nếu có; duyệt pilot trước khi dựng full; xem/duyệt thành phẩm cuối. `jobctl.py` chỉ ghi nguồn tham chiếu phê duyệt thật, **không chứng minh nguồn tham chiếu là chính người dùng**. Agent phải nhận phê duyệt qua kênh hiện hành và không tự tạo.
+
+## Quy trình và hợp đồng
+
+[Xem quy trình N00–N09](WORKFLOW.md) · [Cài đặt](INSTALL.md) · [Bảo mật](SECURITY.md) · [Bộ bài kiểm thử và giới hạn](TESTING.md). Các quy tắc chứng cứ có tại `skills/film-review-orchestrator/references/global-rules.md`.
+
+## Chưa được đóng gói và chưa được làm
+
+- Không mang model weights, phim, audio thật, cache/embedding/transcript, API keys, logo, thumbnail hoặc video của người dùng.
+- Không thay thế hay gỡ hai plugin `review-phim` cũ; không đụng tới dữ liệu Windows của các dự án trước.
+- Không giả định mọi agent đều có FFmpeg, PySceneDetect, CLIP, Whisper, Qwen3-VL hoặc VieNeu.
+- Không tự gán “100% khớp hình”, không coi điểm embedding hoặc caption AI là chứng cứ tuyệt đối.
+
+**Yêu cầu runtime:** Python 3.10+ cho script hỗ trợ; `ffprobe`/`ffmpeg` và AI model là phụ thuộc ngoài chỉ khi muốn thực thi các công đoạn. Các schema dùng JSON Schema 2020-12. Chưa có giấy phép tái phân phối công khai được chỉ định; trước khi public, chủ sở hữu cần chọn LICENSE thích hợp.

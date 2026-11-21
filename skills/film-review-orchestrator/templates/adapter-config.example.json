@@ -1,0 +1,16 @@
+{
+  "execution": "authorized_local_only",
+  "never_auto_install": true,
+  "never_upload_original_film_without_approval": true,
+  "preferred_acceleration": "detect_then_select",
+  "tools": {
+    "ffprobe": {"command": "ffprobe", "enabled": true},
+    "ffmpeg": {"command": "ffmpeg", "enabled": true},
+    "scene_detector": {"command": null, "enabled": false, "note": "PySceneDetect optional"},
+    "visual_retriever": {"command": null, "enabled": false, "note": "CLIP/OpenCLIP optional"},
+    "asr": {"command": null, "enabled": false, "note": "Whisper or language-appropriate ASR"},
+    "vision_model": {"command": null, "enabled": false, "note": "Qwen3-VL or tested equivalent"},
+    "tts": {"command": null, "enabled": false, "note": "User-approved VieNeu or other TTS"}
+  },
+  "output_profile": {"resolution": "source_or_user_preference", "fps": "source_or_user_preference", "music": false, "watermark": false, "intro": false}
+}

@@ -1,0 +1,23 @@
+{
+  "source_movie_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "source_duration_s": 100.0,
+  "narration_duration_s": 12.5,
+  "sentences": [
+    {
+      "sentence_id": "S0001",
+      "review_text": "Một người nói về tài liệu.",
+      "voice_start_s": 0.0,
+      "voice_end_s": 4.5,
+      "atomic_claims": [
+        {"claim_id": "C1", "text": "Có tài liệu", "verdict": "DIALOGUE_SUPPORTED", "evidence_ids": ["ASR001"]}
+      ],
+      "chosen_shots": [
+        {"source_start_s": 21.0, "source_end_s": 25.5,
+         "voice_start_s": 0.0, "voice_end_s": 4.5,
+         "visual_evidence_ids": [], "asr_evidence_ids": ["ASR001"],
+         "verdict": "DIALOGUE_SUPPORTED", "qualifier": "Lời thoại hỗ trợ; không gán danh tính người nói."}
+      ],
+      "unresolved_claims": []
+    }
+  ]
+}

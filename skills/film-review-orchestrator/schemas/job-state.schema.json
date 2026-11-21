@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Film Review Agent 2.0 job state",
+  "type": "object",
+  "required": ["schema_version", "job_id", "source", "stages", "approvals"],
+  "properties": {
+    "schema_version": {"const": "2.0.0"},
+    "job_id": {"type": "string", "minLength": 1},
+    "title": {"type": "string"},
+    "narration_language": {"type": "string"},
+    "source": {"type": "object", "required": ["absolute_path", "sha256", "size_bytes"], "properties": {
+      "absolute_path": {"type": "string"},
+      "sha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+      "size_bytes": {"type": "integer", "minimum": 1},
+      "is_external_original": {"const": true}
+    }},
+    "stages": {"type": "object", "patternProperties": {"^N0[0-9]$": {"type": "object", "required": ["status"], "properties": {
+      "status": {"enum": ["PENDING", "RUNNING", "BLOCKED", "DONE"]},
+      "completed_at_utc": {"type": ["string", "null"]},
+      "evidence_relpath": {"type": ["string", "null"]}
+    }}}, "minProperties": 10, "maxProperties": 10},
+    "approvals": {"type": "object"},
+    "revisions": {"type": "array"}
+  }
+}

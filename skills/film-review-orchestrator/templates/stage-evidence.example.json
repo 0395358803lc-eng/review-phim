@@ -1,0 +1,10 @@
+{
+  "stage": "N00",
+  "outcome": "BLOCKED",
+  "source_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "reviewed_at_utc": "2026-11-21T00:00:00Z",
+  "checks": {"source_file_verified": false, "media_probe_verified": false, "decode_verified": false},
+  "artifacts": [{"path": "ingest/source_manifest.json", "sha256": "SET_ACTUAL_FILE_HASH"}],
+  "limitations": ["Synthetic template: cannot mark PASS without actual source probe and decode"],
+  "tool_versions": {}
+}
