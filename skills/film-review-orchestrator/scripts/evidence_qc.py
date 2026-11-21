@@ -94,12 +94,12 @@ def validate_map(doc: dict) -> list[str]:
         for j, claim in enumerate(claims):
             if not isinstance(claim, dict):
                 continue
-            ids = claim.get("evidence_ids")
-            if not isinstance(ids, list):
+            claim_evidence_ids = claim.get("evidence_ids")
+            if not isinstance(claim_evidence_ids, list):
                 continue
-            if claim.get("verdict") == "VISUAL_DIRECT" and not (set(ids) & shot_visual_ids):
+            if claim.get("verdict") == "VISUAL_DIRECT" and not (set(claim_evidence_ids) & shot_visual_ids):
                 problems.append(f"{k}.claim[{j}] claim evidence not linked to chosen visual shots")
-            if claim.get("verdict") == "DIALOGUE_SUPPORTED" and not (set(ids) & shot_asr_ids):
+            if claim.get("verdict") == "DIALOGUE_SUPPORTED" and not (set(claim_evidence_ids) & shot_asr_ids):
                 problems.append(f"{k}.claim[{j}] claim evidence not linked to chosen ASR shots")
         for j, shot in enumerate(shots):
             tag = f"{k}.chosen_shots[{j}]"

@@ -17,7 +17,9 @@ sys.path.insert(0,str(REPO/"skills"/"film-review-orchestrator"/"scripts"))
 import jobctl
 from engine21 import state
 from stage3.framework import sha256,runtime_digest
-from stage3.media import decode,probe,render
+from stage3.media import decode,probe
+from stage4.media import loop_source_with_voice
+from stage4.approval_requests import make_request,save_request
 
 MODELS={
  "N02":("asr","asr/faster-whisper-large-v3-turbo/model.bin"),
@@ -29,6 +31,15 @@ MODELS={
  "N08":("system",None),
  "N09":("system",None),
 }
+
+def pinned_code_inputs(repo_root:Path,worker:Path)->dict[str,str]:
+    """Pin worker and ALL directly imported Stage4/semantic QC code by SHA."""
+    base=Path(repo_root).resolve(strict=True)
+    deps=[Path(worker),*sorted((base/"stage4").glob("*.py")),
+          base/"skills"/"film-review-orchestrator"/"scripts"/"evidence_qc.py"]
+    if len(deps)<4:
+        raise ValueError("Stage4 worker dependencies missing; refuse unpinned worker")
+    return {str(p.resolve(strict=True)):sha256(p.resolve(strict=True)) for p in deps}
 
 def check(test,reason):
     if not test:raise AssertionError(reason)
@@ -66,7 +77,7 @@ def main():
     parser.add_argument("--voice-sample",type=Path,required=True)
     args=parser.parse_args()
     root=args.qa_root.resolve(strict=True)
-    check(root.name=="__FRA_LEGACY_ACCEPTANCE_20261122","QA root must be the preauthorized isolated workspace")
+    check(root.name=="__FRA_PHASE4_NARRATIVE_20261122","QA root must be the preauthorized isolated Phase4 workspace")
     legacy=args.legacy_root.resolve(strict=True)
     models=legacy/"models"
     source=args.source.resolve(strict=True)
@@ -91,11 +102,11 @@ def main():
         }
         worker=REPO/"qa"/"legacy_offline_worker.py"
         check(worker.is_file(),"QA worker not found")
-        digest_worker=sha256(worker)
+        pinned_inputs=pinned_code_inputs(REPO,worker)
         configs={}
         for stage,(venv,weightrel) in MODELS.items():
             exe=Path(installed[venv]).resolve(strict=True)
-            files={str(worker):digest_worker}
+            files=dict(pinned_inputs)
             if weightrel:
                 weight=models/weightrel
                 if not weight.is_file():raise FileNotFoundError("Model weight absent "+weightrel)
@@ -148,8 +159,7 @@ def main():
         voice_props=decode(voice_path,need_audio=True)
         approved_pilot=job/"edit"/"pilot.mp4"
         approved_pilot.parent.mkdir(exist_ok=True)
-        render(source,voice_path,approved_pilot,
-             min(probe(source)["duration_s"],voice_props["duration_s"]))
+        loop_source_with_voice(source,voice_path,approved_pilot)
         (receipts/"pilot.json").write_text(json.dumps(
              sign(job_id,"pilot",sha256(approved_pilot),key)),encoding="utf8")
         call("N08_expected_block",(*prefix,"--stage","N08"),records,expect_success=False)
@@ -172,7 +182,30 @@ def main():
         final=next(job/x["path"] for x in st["stages"]["N09"]["artifacts"]
                    if Path(x["path"]).name=="final_review.mp4")
         final_props=decode(final,need_audio=True,need_video=True)
+        if abs(final_props["duration_s"]-voice_props["duration_s"])>0.11:
+            raise AssertionError("QA pilot truncated TTS narration")
+        n05=next(job/x["path"] for x in st["stages"]["N05"]["artifacts"]
+                 if Path(x["path"]).name=="sentence_claims.jsonl")
+        n07=next(job/x["path"] for x in st["stages"]["N07"]["artifacts"]
+                 if Path(x["path"]).name=="sentence_shot_map.json")
+        claim=json.loads(n05.read_text(encoding="utf8").splitlines()[0])
+        mapping=json.loads(n07.read_text(encoding="utf8"))
+        mapped=mapping["sentences"][0]
+        if (mapped["atomic_claims"]!=claim["atomic_claims"]
+            or mapped["review_text"]!=claim["review_text"]
+            or mapped["sentence_id"]!=claim["sentence_id"]):
+            raise AssertionError("N07 substituted evidence or review from N05")
+        requests={}
+        for gate in ("script","voice","pilot"):
+            unsigned=make_request(job,gate)
+            if "signature" in unsigned or unsigned["human_approved"] is not False:
+                raise AssertionError("Agent created false human approval")
+            requests[gate]=save_request(job,unsigned).name
         summary.update({"status":"PASS","cases":len(records),"model_providers":providers,
+            "unsigned_approval_requests":requests,
+            "n05_n07_claim_ids_match":True,
+            "voice_preserved_full_duration":True,
+            "voice_duration_s":voice_props["duration_s"],
             "final_mp4_sha256":sha256(final),
             "final_mp4_duration_s":final_props["duration_s"],
             "final_mp4_bytes":final.stat().st_size,
