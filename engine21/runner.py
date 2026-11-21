@@ -10,6 +10,22 @@ import subprocess
 from . import state, gates
 
 
+_ALLOWED_CHILD_ENV = frozenset({
+    "PATH","SYSTEMROOT","WINDIR","TEMP","TMP","HOME","LANG","LC_ALL","PYTHONPATH",
+    "HF_HOME","HF_HUB_OFFLINE","TRANSFORMERS_OFFLINE",
+    "HF_HUB_DISABLE_TELEMETRY","TORCH_HOME",
+})
+
+
+def provider_environment()->dict[str,str]:
+    """Only explicitly approved subprocess env; preserve offline/cache controls.
+
+    The parent host must set these values. Model runners cannot use unrelated
+    secrets from the invocation environment; no arbitrary environment pass-through.
+    """
+    return {k:v for k,v in os.environ.items() if k.upper() in _ALLOWED_CHILD_ENV}
+
+
 def adapter_config(path:Path) ->dict:
     config=json.loads(Path(path).read_text(encoding='utf8'))
     if config.get('schema_version')!='2.1.0' or not isinstance(config.get('stages'),dict):
@@ -99,8 +115,7 @@ def run(job:Path, config_path:Path, stage:str, *,receipts_dir:Path|None=None,
                 'source':state.job_details(job)['source']['absolute_path'],
                 'source_sha256':s['source_sha256']}
         command=_command(spec,values)
-        env={k:v for k,v in os.environ.items() if k.upper() in {
-             'PATH','SYSTEMROOT','WINDIR','TEMP','TMP','HOME','LANG','LC_ALL','PYTHONPATH'}}
+        env=provider_environment()
         env.update({'FRA_JOB':str(job),'FRA_STAGE':stage,
                     'FRA_OUTPUT_DIR':str(output_dir),
                     'FRA_SOURCE':str(values['source']),
