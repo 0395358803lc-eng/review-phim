@@ -18,13 +18,15 @@ SKILLS = {
 
 class SkillPackagingTests(unittest.TestCase):
     def test_all_11_standard_skills_with_valid_discovery(self):
-        import yaml
+        # Source-package verification must not require an optional PyYAML install.
         actual = {p.name for p in (ROOT / "skills").iterdir() if p.is_dir()}
         self.assertEqual(actual, SKILLS)
         for name in SKILLS:
             body = (ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
             self.assertTrue(body.startswith("---\n"), name)
-            front = yaml.safe_load(body.split("---", 2)[1])
+            matched = re.match(r"\A---\n(.*?)\n---\n", body, re.DOTALL)
+            self.assertIsNotNone(matched, name)
+            front = dict(re.findall(r"^(name|description):\s*(.*?)\s*$", matched.group(1), re.MULTILINE))
             self.assertEqual(front["name"], name)
             self.assertTrue(front["description"].startswith("Use when "), name)
             self.assertLessEqual(len(front["description"]), 1024)
