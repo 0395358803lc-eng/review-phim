@@ -1,0 +1,5 @@
+{
+  "schema_version": "3.0",
+  "stages": {},
+  "note": "No production worker enabled. Configure only installed, user-approved local executables with SHA256 pinning."
+}

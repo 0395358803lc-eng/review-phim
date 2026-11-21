@@ -9,6 +9,10 @@ description: Use when an AI agent receives a new movie to review, resumes a paus
 
 Điều phối một job **từ phim nguyên bản đến video review có bằng chứng**, không sử dụng timeline/công thức từ dự án trước. Đây là skill hướng dẫn, **không tự cấp quyền file, GPU, internet hoặc máy từ xa**.
 
+## Runtime 2.1 — cần đọc trước khi tích hợp
+
+Đọc [hướng dẫn runtime nguồn sạch](references/runtime-integration.md) và `AGENT_RUNTIME.md` ở thư mục gốc repository. Phân biệt rõ 11 skill hướng dẫn với adapter AI thực thi: dùng `scripts/install_agent_runtime.py` để kiểm tra/cài mã nguồn, không sao chép media hay dữ liệu test cũ. Runtime có thể vận hành từng stage với provider được chủ máy cấu hình; không tự coi chạy QA tổng hợp là đã sẵn sàng dựng phim thật.
+
 ## Bắt đầu một phim mới
 
 1. Xác định phim nguồn được người dùng cấp phép, thiết bị/thư mục làm việc và mục đích sử dụng. Không tự cài ứng dụng hay tải nguồn vào cloud.

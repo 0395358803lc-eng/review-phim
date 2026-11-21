@@ -1,62 +1,46 @@
-# Film Review Agent Skills 2.0.0
+# Film Review Agent 2.1 — Runtime + 11 Agent Skills
 
-**11 Agent Skills độc lập (1 điều phối + 10 chuyên môn), không phải plugin ChatGPT.** Bộ này biến bộ phim nguyên bản thành một dự án review có thể truy vết bằng chứng, ghép cảnh theo từng ý và kiểm duyệt sản phẩm thật. Tất cả được viết mới; không đóng gói data phim, timeline hay state machine của plugin cũ.
+**Mã nguồn chạy được, không kèm dữ liệu phim/test.** Repository này chứa 11 Agent Skills hướng dẫn, Execution Engine 2.1, bộ xử lý FFmpeg, các thư viện chứng cứ/CLIP/Qwen/Anh–Việt, và công cụ kiểm tra cảnh cho AI Agent. Không tự động tải model hay đem theo dữ liệu của phim cũ.
 
-## Có gì trong gói?
-
-- `skills/film-review-orchestrator/SKILL.md` — chọn giai đoạn N00–N09, xác định phụ thuộc, ghi tiến độ, phục hồi công việc, khóa nguồn.
-- `skills/film-intake` — kiểm nguồn; `scene-indexing` — chia cảnh; `speech-analysis` — ASR và dịch; `visual-analysis` — xem chuyển động.
-- `skills/story-memory` — mạch chuyện có chứng cứ; `review-writing` — lời bình; `voice-production` — TTS/timestamp; `semantic-matching` — tìm/kiểm shot.
-- `skills/video-editing` — dựng; `quality-delivery` — QC độc lập và bàn giao.
-- Bên trong skill điều phối có `references/`, `schemas/`, `templates/` và `scripts/jobctl.py`, `scripts/evidence_qc.py` dùng **Python standard library**, không cần cài package AI để quản lý job.
-- `tests/` và `scripts/validate_release.py` chỉ dùng khi kiểm gói nguồn; có thể không cài cùng skills vào môi trường agent.
-
-## Cài nhanh — sao chép thư mục skills
-
-Xem [INSTALL.md](INSTALL.md) cho Windows và Linux/macOS. Ví dụ cài phạm vi một project trên Linux/macOS:
+## Tích hợp vào AI Agent (Windows / Linux / macOS)
 
 ```bash
-mkdir -p .agents/skills
-cp -R skills/* .agents/skills/
+python scripts/install_agent_runtime.py doctor
+python scripts/install_agent_runtime.py install --project "/path/to/YOUR_NEW_AGENT_PROJECT"
 ```
 
-Ví dụ trên Windows PowerShell, thực hiện **từ thư mục đã giải nén ZIP**:
+Trên Windows, dùng đường dẫn Windows trong `--project`. Lệnh tạo:
+- `.agents/skills/` — 11 skill được AI Agent khám phá.
+- `.agents/film-review-runtime/` — Engine và module Python có thể thực thi.
 
-```powershell
-New-Item -ItemType Directory -Force -Path .agents\skills | Out-Null
-Copy-Item -Path .\skills\* -Destination .\.agents\skills\ -Recurse -Force
-```
+Cài đặt **không sửa đè** skills hay dữ liệu đã có. Để tích hợp đầy đủ, đọc [AGENT_RUNTIME.md](AGENT_RUNTIME.md).
 
-Các agent nhận diện `.agents/skills/` hoặc `~/.agents/skills/` có thể khám phá từng skill theo phần mô tả trong YAML frontmatter. Nếu nền tảng dùng thư mục khác, theo hướng dẫn của nền tảng đó. Bộ này chưa thiết lập công cụ thực thi giúp agent truy cập máy của bạn; phải cấu hình adapter và quyền truy cập riêng.
+## Đã thực thi / đã kiểm chứng
 
-## Lệnh cốt lõi (từ thư mục gói)
+- 11 skills và jobctl Python; Engine21 kiểm tra hash, tiến độ, phục hồi, evidence và cổng phê duyệt.
+- N00/N01: FFprobe, FFmpeg, lập chỉ mục video — chạy trực tiếp trên source mới khi có FFmpeg.
+- N02/N03/N06/N07: Whisper, Qwen3-VL, VieNeu, CLIP đã được thử với model có sẵn trên máy Windows; tuy nhiên **worker AI production tổng quát chưa được đóng gói**. AI Agent phải chỉ định adapter và model cục bộ.
+- N04/N05: lưu sự kiện và viết bản nháp có mã chứng cứ; chưa bảo đảm diễn biến phim đúng nếu chưa duyệt.
+- Phase5: xác minh SHA câu Anh/bản dịch Việt, CLIP→Qwen, storyboard nhiều câu.
+- Phase6: đối chiếu audio và điểm cắt cảnh, hồ sơ nghe/xem lại **chưa ký**.
+
+**Không tuyên bố:** AI có thể tự chạy trọn vẹn N00–N09 trên bất cứ phim thật nào chỉ bằng một lệnh. Dựng phim có giọng thật vẫn cần adapter sản xuất và phê duyệt script/voice/pilot từ con người.
+
+## Gói mã sạch (không mang test data)
 
 ```bash
-python skills/film-review-orchestrator/scripts/jobctl.py init \
-  --source "/authorized/path/original_movie.mp4" \
-  --workspace-root "/authorized/workspaces" \
-  --title "Tên phim"
-python skills/film-review-orchestrator/scripts/jobctl.py status --job "/authorized/workspaces/film-..."
-python skills/film-review-orchestrator/scripts/jobctl.py verify-source --job "/authorized/workspaces/film-..."
-python skills/film-review-orchestrator/scripts/evidence_qc.py \
-  --map "/authorized/workspaces/film-.../match/sentence_shot_map.json"
+python scripts/package_release.py --output "/path/to/film-review-runtime-2.1-source-only.zip"
 ```
 
-Trên Windows, thay đường dẫn nguồn/workspace bằng đường dẫn Windows của thiết bị **được cấp quyền**. `init` tạo project, hash phim, thử `ffprobe`; **không chạy ASR, vision, TTS, render video**. Media cần adapter và thực thi tương ứng; không nhầm tạo job với hoàn tất phân tích.
+Lệnh đóng gói theo danh sách cho phép, chỉ chứa source runtime và installer; **không có** `tests/`, QA outputs, phim, video, giọng, transcript, cache, checkpoint AI, khóa bí mật hay trọng số mô hình. Các tệp test cũ đang có sẵn trong lịch sử repository không được đưa vào gói tích hợp và không được dùng làm nguồn cho phim mới.
 
-## Điểm phê duyệt không được tự bỏ qua
+## Từ phim mới đến Engine
 
-Người dùng duyệt review trước toàn bộ lời đọc; duyệt giọng mẫu mới nếu có; duyệt pilot trước khi dựng full; xem/duyệt thành phẩm cuối. `jobctl.py` chỉ ghi nguồn tham chiếu phê duyệt thật, **không chứng minh nguồn tham chiếu là chính người dùng**. Agent phải nhận phê duyệt qua kênh hiện hành và không tự tạo.
+1. AI Agent đọc skill `film-review-orchestrator` và `references/runtime-integration.md`.
+2. Tạo job mới: `python skills/film-review-orchestrator/scripts/jobctl.py init --source NEW_MOVIE.mp4 --workspace-root NEW_WORKSPACES --title "Movie"`.
+3. Chủ máy cấu hình `engine21` với adapter cục bộ và phép duyệt thật **ở ngoài job phim**. Không tự tạo chữ ký hoặc dùng demo QA.
+4. Chạy từng stage và đối chiếu hash/timecode, dừng khi thiếu model hay lời duyệt.
 
-## Quy trình và hợp đồng
+Thư mục nguồn và job của mọi phim cũ không được truy nhập hoặc ghi đè trong quy trình cài đặt này.
 
-[Xem quy trình N00–N09](WORKFLOW.md) · [Cài đặt](INSTALL.md) · [Bảo mật](SECURITY.md) · [Bộ bài kiểm thử và giới hạn](TESTING.md). Các quy tắc chứng cứ có tại `skills/film-review-orchestrator/references/global-rules.md`.
-
-## Chưa được đóng gói và chưa được làm
-
-- Không mang model weights, phim, audio thật, cache/embedding/transcript, API keys, logo, thumbnail hoặc video của người dùng.
-- Không thay thế hay gỡ hai plugin `review-phim` cũ; không đụng tới dữ liệu Windows của các dự án trước.
-- Không giả định mọi agent đều có FFmpeg, PySceneDetect, CLIP, Whisper, Qwen3-VL hoặc VieNeu.
-- Không tự gán “100% khớp hình”, không coi điểm embedding hoặc caption AI là chứng cứ tuyệt đối.
-
-**Yêu cầu runtime:** Python 3.10+ cho script hỗ trợ; `ffprobe`/`ffmpeg` và AI model là phụ thuộc ngoài chỉ khi muốn thực thi các công đoạn. Các schema dùng JSON Schema 2020-12. Chưa có giấy phép tái phân phối công khai được chỉ định; trước khi public, chủ sở hữu cần chọn LICENSE thích hợp.
+[Hướng dẫn cài](INSTALL.md) · [Runtime chi tiết](AGENT_RUNTIME.md) · [Quy trình](WORKFLOW.md) · [An toàn](SECURITY.md).

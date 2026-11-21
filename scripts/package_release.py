@@ -1,52 +1,67 @@
 #!/usr/bin/env python3
-"""Build a standalone ZIP without cache/media and verify checksums after extraction."""
+"""Create a source-only Agent runtime ZIP. Never include tests or old film data."""
 from __future__ import annotations
+
+import argparse
 import hashlib
 from pathlib import Path
-import shutil
 import tempfile
 import zipfile
-import sys
 
-ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT.parent / (ROOT.name + ".zip")
-EXCLUDED_PARTS = {"__pycache__", ".pytest_cache", ".git"}
-EXCLUDED_SUFFIX = {".pyc", ".tmp", ".swp"}
+from install_agent_runtime import ROOT, source_manifest
 
+PACKAGE_ROOT = "film-review-runtime-2.1"
 
-def filehash(path: Path) -> str:
+def digest(path: Path) -> str:
     h = hashlib.sha256()
-    with path.open('rb') as f:
-        for chunk in iter(lambda: f.read(4 * 1024 * 1024), b''):
-            h.update(chunk)
+    with path.open("rb") as stream:
+        for piece in iter(lambda: stream.read(1024 * 1024), b""):
+            h.update(piece)
     return h.hexdigest()
 
-
-def files():
-    return sorted(p for p in ROOT.rglob('*') if p.is_file() and not set(p.parts) & EXCLUDED_PARTS and p.suffix not in EXCLUDED_SUFFIX and p.name != 'MANIFEST.sha256')
-
-
-def main():
-    entries = [(filehash(p), p.relative_to(ROOT).as_posix()) for p in files()]
-    (ROOT / 'MANIFEST.sha256').write_text(''.join(f'{digest}  {name}\n' for digest,name in entries),encoding='utf-8')
-    with zipfile.ZipFile(OUT, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
-        for p in files() + [ROOT / 'MANIFEST.sha256']:
-            z.write(p, arcname=f'{ROOT.name}/{p.relative_to(ROOT).as_posix()}')
-    with zipfile.ZipFile(OUT) as z:
+def package(output: Path) -> dict:
+    output = Path(output).expanduser().resolve()
+    if output.exists():
+        raise FileExistsError("Refusing to overwrite existing ZIP: "+str(output))
+    if not output.parent.is_dir():
+        raise FileNotFoundError("Output parent directory missing")
+    files = sorted(set(source_manifest(ROOT) + ["scripts/install_agent_runtime.py"]))
+    if any(p.startswith(("tests/", "docs/qa/", "docs/superpowers/"))
+           or any("synthetic" in p.lower() for p in (path,))
+           or p.startswith("qa/legacy_offline_worker")
+           for p in files for path in [p]):
+        raise ValueError("Source-only manifest unexpectedly includes QA/test data")
+    checksums = {p: digest(ROOT / p) for p in files}
+    manifest = "".join(f"{h}  {p}\n" for p,h in checksums.items())
+    with zipfile.ZipFile(output, "x", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
+        for path in files:
+            z.write(ROOT / path, arcname=PACKAGE_ROOT+"/"+path)
+        z.writestr(PACKAGE_ROOT+"/SHA256SUMS.txt", manifest)
+    with zipfile.ZipFile(output, "r") as z:
         if z.testzip() is not None:
-            raise RuntimeError('Corrupted ZIP member')
-        names=z.namelist()
-        if any('__pycache__' in n or n.endswith('.mp4') or n.endswith('.wav') for n in names):
-            raise RuntimeError('Release contains cache or user media')
-        with tempfile.TemporaryDirectory() as tmp:
-            z.extractall(tmp)
-            extracted = Path(tmp) / ROOT.name
-            for digest,name in entries:
-                if filehash(extracted/name)!=digest:
-                    raise RuntimeError('SHA256 mismatch after extract: '+name)
-            if not (extracted/'skills/film-review-orchestrator/SKILL.md').is_file():
-                raise RuntimeError('Skill not discoverable in ZIP')
-    print(f'OK ZIP: {OUT} bytes={OUT.stat().st_size} files={len(entries)+1} sha256={filehash(OUT)}')
+            raise ValueError("Corrupted ZIP entry")
+        actual = z.namelist()
+        expected = [PACKAGE_ROOT+"/"+p for p in files]+[PACKAGE_ROOT+"/SHA256SUMS.txt"]
+        if sorted(actual)!=sorted(expected):
+            raise ValueError("Archive does not match allowlist")
+        with tempfile.TemporaryDirectory() as temp:
+            z.extractall(temp)
+            directory = Path(temp)/PACKAGE_ROOT
+            for relative, h in checksums.items():
+                if digest(directory/relative)!=h:
+                    raise ValueError("Extracted SHA256 differs: "+relative)
+    return {"status":"SOURCE_ONLY_ZIP_VERIFIED",
+            "zip":str(output),"zip_sha256":digest(output),
+            "source_files":len(files),"test_files":0,"user_media_files":0,
+            "old_movie_data":False}
 
-if __name__ == '__main__':
-    main()
+def main() -> int:
+    args = argparse.ArgumentParser(description=__doc__)
+    args.add_argument("--output",type=Path,default=ROOT.parent/"film-review-runtime-2.1-source-only.zip")
+    opts=args.parse_args()
+    import json
+    print(json.dumps(package(opts.output),ensure_ascii=False,indent=2))
+    return 0
+
+if __name__=="__main__":
+    raise SystemExit(main())
