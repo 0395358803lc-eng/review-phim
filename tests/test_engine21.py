@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import wave
 from datetime import datetime, timedelta, timezone
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -168,7 +169,8 @@ class EngineTests(unittest.TestCase):
         self.seed_done('N00','N01','N02','N03','N04','N05')
         (self.job/'voice').mkdir(exist_ok=True)
         sample=self.job/'voice'/'approved_sample.wav'
-        sample.write_bytes(b'sample-fixture')
+        with wave.open(str(sample), 'wb') as w:
+            w.setnchannels(1); w.setsampwidth(2); w.setframerate(16000); w.writeframes(b'\x00\x00'*1600)
         with self.assertRaises((PermissionError,ValueError)):
             runner.run(self.job,self.config,'N06',receipts_dir=self.approvals,key=self.key)
         s=estate.load_or_init(self.job,self.config)
@@ -297,6 +299,36 @@ doc['artifacts']=artifacts
         result=runner.run(self.job,c,'N00')
         self.assertEqual(result['status'],'FAILED')
         self.assertIn('source',result['reason'].lower())
+
+    def test_changed_legacy_job_manifest_cannot_rebind_engine_source(self):
+        runner.run(self.job,self.config,'N00')
+        legacy=jobctl.read_job(self.job)
+        movie=Path(legacy['source']['absolute_path'])
+        movie.write_bytes(b'replaced-source')
+        legacy['source']['sha256']=sha(movie)
+        legacy['source']['size_bytes']=movie.stat().st_size
+        (self.job/'job_state.json').write_text(json.dumps(legacy))
+        result=estate.reconcile(self.job)
+        self.assertFalse(result['source_intact'])
+        self.assertEqual(result['stages']['N00']['status'],'STALE')
+
+    def test_engine_directory_symlink_cannot_escape_workspace(self):
+        if os.name=='nt':self.skipTest('Symlink creation requires Windows privileges')
+        outside=self.top/'outside'
+        outside.mkdir()
+        (self.job/'.engine21').symlink_to(outside,target_is_directory=True)
+        with self.assertRaises(ValueError):
+            estate.load_or_init(self.job,self.config)
+        self.assertFalse((outside/'engine.lock').exists())
+
+    def test_forged_voice_sample_bytes_rejected_even_with_valid_signature(self):
+        self.seed_done('N00','N01','N02','N03','N04','N05')
+        sample=self.job/'voice'/'approved_sample.wav'
+        sample.write_bytes(b'not-a-WAV')
+        self.write_receipt('script',estate.read_state(self.job)['stages']['N05']['evidence_sha256'])
+        self.write_receipt('voice',sha(sample))
+        with self.assertRaises(ValueError):
+            runner.run(self.job,self.config,'N06',receipts_dir=self.approvals,key=self.key)
 
     def write_receipt(self,gate,digest):
         receipt=sign_receipt(jobctl.read_job(self.job)['job_id'],gate,digest,self.key,ttl_seconds=120)

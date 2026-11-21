@@ -24,28 +24,30 @@
 
 ### Task 1: State & Recovery
 **Files:** engine21/state.py, tests/test_engine21.py.
-- [ ] Write tests for job startup, source hash change, stale artifact, DAG and interrupted run.
-- [ ] Run tests, record failing RED.
-- [ ] Implement atomic state, locks, reconciling and inherited invalidations.
-- [ ] Verify GREEN tests.
+- [x] Write tests for job startup, source hash change, stale artifact, DAG and interrupted run.
+- [x] Run tests, record failing RED.
+- [x] Implement atomic state, locks, reconciling and inherited invalidations.
+- [x] Verify GREEN tests.
 
 ### Task 2: Approval & Evidence Gate
 **Files:** engine21/gates.py, tests/test_engine21.py.
-- [ ] Write tests for bad signature, wrong subject, expiry and genuine receipt.
-- [ ] Run RED.
-- [ ] Implement host-signed HMAC verification and real artifact/media validators.
-- [ ] Verify GREEN tests.
+- [x] Write tests for bad signature, wrong subject, expiry and genuine receipt.
+- [x] Run RED.
+- [x] Implement host-signed HMAC verification and real artifact/media validators.
+- [x] Verify GREEN tests.
 
 ### Task 3: Bounded Task Runner
 **Files:** engine21/runner.py, engine21/__main__.py, tests/test_engine21.py.
-- [ ] Write tests for subprocess success/failure/timeout, allowed adapters, retries, resumability.
-- [ ] Run RED.
-- [ ] Implement safe argv executor and atomic state transitions.
-- [ ] Verify GREEN tests and original suite.
+- [x] Write tests for subprocess success/failure/timeout, allowed adapters, retries, resumability.
+- [x] Run RED.
+- [x] Implement safe argv executor and atomic state transitions.
+- [x] Verify GREEN tests and original suite.
 
 ### Task 4: Operational docs, independent review and branch delivery
 **Files:** ENGINE21.md, README.md (append-only), tests and GitHub branch.
-- [ ] Document host trust boundary, approval issuance, command examples and limits.
-- [ ] Test from a clean checkout with FFmpeg fixture; run all unit tests and validate_release.py.
-- [ ] Review security and file changes; verify 11 skills byte-for-byte.
-- [ ] Push development branch and open PR, leaving main unchanged.
+- [x] Document host trust boundary, approval issuance, command examples and limits.
+- [x] Test from a clean checkout with FFmpeg fixture; run all unit tests and validate_release.py.
+- [x] Review security and file changes; verify 11 skills byte-for-byte.
+- [x] Push development branch and open PR, leaving main unchanged.
+
+**Verification update:** 20 new engine tests and 9 original tests passed in the local isolated worktree. Awaiting human PR review before main merge. Windows/native AI adapters are not yet end-to-end verified.

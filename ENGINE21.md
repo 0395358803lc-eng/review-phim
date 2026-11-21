@@ -61,7 +61,7 @@ Phase 1 only permits a trusted host-configured adapter binary. SHA256 of configu
 
 ### Human approvals
 
-Before N06, the external human-facing supervisor must create signed `script.json` bound to SHA256 of **N05 evidence** and signed `voice.json` bound to SHA256 of `voice/approved_sample.wav`. Before full N08, it must create signed `pilot.json` bound to the actual, decodable `edit/pilot.mp4`. The approval receipt fields are:
+Before N06, the external human-facing supervisor must create signed `script.json` bound to SHA256 of **N05 evidence** and signed `voice.json` bound to SHA256 of a **decodable WAV** at `voice/approved_sample.wav`. Before full N08, it must create signed `pilot.json` bound to the actual, decodable `edit/pilot.mp4`. The approval receipt fields are:
 
 ```json
 {
@@ -95,3 +95,5 @@ Outputs are append-only in `.engine21/attempts/Nxx/0001/`, `0002/`, etc. The mai
 ### Limits / next phases
 
 N00/N06/N08/N09 use `ffprobe` followed by full `ffmpeg` decode; this proves basic technical decodability, **not** perfect cinematic accuracy. N07 checks semantic ledger structure and source references; it cannot verify every character identity or emotion without real source-frame review. Phase 1 adapters are not installed and no real film was analyzed by the engine. Phase 2 must implement per-tool media/AI adapters and end-to-end real-film tests. Final user acceptance is distinct from a machine PASS.
+
+**Additional source integrity:** The engine refuses an intake manifest re-pointed at a different original source, and refuses a symlinked `.engine21` runtime folder that could redirect writes outside the job. Real host filesystem permissions are still required to protect originals and the approval secret.

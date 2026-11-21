@@ -96,7 +96,10 @@ def source_valid(job: Path, details: dict | None = None) -> bool:
 @contextmanager
 def exclusive(job: Path):
     """Advisory lock released by OS even if the runner crashes. Linux/Windows."""
-    root = Path(job) / '.engine21'
+    jobroot = Path(job).resolve(strict=True)
+    root = jobroot / '.engine21'
+    if root.is_symlink() or (root.exists() and not root.resolve().is_relative_to(jobroot)):
+        raise ValueError('Engine runtime folder may not be a symlink or escape the workspace')
     root.mkdir(mode=0o700, parents=True, exist_ok=True)
     with (root/'engine.lock').open('a+b') as handle:
         handle.seek(0, 2)
@@ -177,7 +180,8 @@ def _verified_stage(job: Path, record: dict) -> bool:
 
 
 def reconcile_locked(job: Path, obj: dict) -> dict:
-    if not source_valid(job):
+    # Verify the immutable engine source lock even if the 2.0 intake manifest was edited.
+    if job_details(job)['source']['sha256'] != obj['source_sha256'] or not source_valid(job):
         for item in obj['stages'].values():
             if item['status'] == 'DONE':
                 item['status'] = 'STALE'

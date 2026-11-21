@@ -11,6 +11,6 @@
 ## 2.1.0 development branch — Phase 1 Execution Engine
 
 - Add standalone engine21 Task Runner, recovery/state, signed approval and stage-evidence gates.
-- Add tests for source/config tampering, interrupted and stale tasks, media decoding, bounded timeout/retry and missing approvals.
+- Add tests for source/config tampering, symlink escape, changed legacy source manifest, invalid voice sample, interrupted/stale tasks, media decoding, bounded timeout/retry and missing approvals.
 - Preserve 11 existing Agent Skills and v2.0 jobctl APIs unchanged; **no automatic migration or changes to main**.
 - No production model integrations in this phase.

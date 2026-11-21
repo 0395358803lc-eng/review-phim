@@ -56,7 +56,9 @@ def _subject(job: Path, obj:dict, gate:str) -> str:
             raise PermissionError('Review script not yet completed')
         return completed['evidence_sha256']
     if gate == 'voice':
-        return state.sha256(state.inside_job(job,'voice/approved_sample.wav'))
+        sample=state.inside_job(job,'voice/approved_sample.wav')
+        verify_media(sample,require_audio=True)
+        return state.sha256(sample)
     if gate == 'pilot':
         pilot=state.inside_job(job,'edit/pilot.mp4')
         verify_media(pilot, require_audio=True, require_video=True)
