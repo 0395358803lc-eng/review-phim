@@ -80,3 +80,7 @@ See [PHASE4.md](PHASE4.md) and the [Windows acceptance report](docs/qa/phase4-gr
 ## Phase 5 — Source-locked bilingual evidence and CLIP → Qwen verification (Draft)
 
 See [PHASE5.md](PHASE5.md) and [sanitized Fatman QA](docs/qa/phase5-fatman-2026-11-22.md). Source-bound EN→VI candidates, Qwen verification of exact N05 visual claims after CLIP and multi-sentence storyboard planning are tested. Real-film narrator/pilot remain unapproved; no movie/media/model weights are packaged.
+
+## Phase 6 — Offline real-film dialogue and scene human review queue (Draft)
+
+See [PHASE6.md](PHASE6.md) and [sanitized Fatman QA](docs/qa/phase6-fatman-2026-11-22.md). The source-locked 17-dialogue private audio review, FFmpeg candidate scene cuts, boundary-aware three-claim storyboard checks and unsigned offline HTML human worksheet have been tested. No real film/script/voice/pilot has been approved, and no movie/audio/transcripts/model weights are packaged.
