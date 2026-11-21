@@ -234,6 +234,46 @@ def _n06(ctx:WorkerContext,models:Path)->str:
       "duration_s":dur,"sha256":digest(wav),"voice_approved_for_real_film":False})
     return "local-VieNeu-v3-Turbo-TrucLy-test-only"
 
+def gate_source_n07(source_sha256:str,source_duration_s:float,
+                    claim:dict,source_vision:dict,current_frame_sha256:str,
+                    clip_scores:list[float],qwen_verdict:str)->dict:
+    """Require a real Qwen answer for the exact original N05 source-frame claim.
+
+    Other CLIP QA images are distractions, not source movie evidence. Even if
+    a distractor ranks higher, it must never replace the bound movie frame.
+    """
+    from stage5.qwen_provider import parse_visual_verdict
+    from stage5.visual_gate import select_visual_shot
+    import math
+    if (source_vision.get("source_sha256")!=source_sha256 or
+        source_vision.get("frame_sha256")!=current_frame_sha256):
+        raise ValueError("Source frame SHA/provenance mismatch")
+    if (claim.get("text")!=source_vision.get("description") or
+        claim.get("verdict")!="VISUAL_DIRECT" or
+        source_vision.get("id") not in claim.get("evidence_ids",[])):
+        raise ValueError("N05 claim text/evidence differs from original N03 visual observation")
+    if (not isinstance(clip_scores,list) or not clip_scores or
+        any(type(x) not in (float,int) or not math.isfinite(x)
+            or abs(x)>1.001 for x in clip_scores)):
+        raise ValueError("Invalid CLIP cosine scores")
+    candidate={"frame_id":source_vision["id"],"source_sha256":source_sha256,
+       "frame_sha256":current_frame_sha256,
+       "start_s":source_vision["start_s"],"end_s":source_vision["end_s"],
+       "raw_cosine":clip_scores[0]}
+    answer=parse_visual_verdict(qwen_verdict)
+    verification={"claim_id":claim["claim_id"],
+       "claim_text_sha256":hashlib.sha256(claim["text"].encode("utf8")).hexdigest(),
+       "frame_id":source_vision["id"],"source_sha256":source_sha256,
+       "frame_sha256":current_frame_sha256,
+       "verdict":answer,"provider":"Qwen3-VL-2B-Instruct-CUDA",
+       "human_approved":False}
+    result=select_visual_shot(source_sha256,claim,[candidate],[verification],
+                              source_duration_s)
+    result["clip_source_rank_total_candidates"]=1+sum(s>clip_scores[0]+1e-8 for s in clip_scores[1:])
+    result["clip_total_candidates"]=len(clip_scores)
+    return result
+
+
 def _n07(ctx:WorkerContext,models:Path)->str:
     import torch
     from PIL import Image,ImageDraw
@@ -262,8 +302,8 @@ def _n07(ctx:WorkerContext,models:Path)->str:
     em=torch.nn.functional.normalize(em.float(),dim=-1)
     te=torch.nn.functional.normalize(te.float(),dim=-1)
     scores=(te@em.T).flatten().cpu().tolist()
-    if max(range(3),key=lambda i:scores[i])!=0:
-        raise ValueError("CLIP did not retrieve source image as top candidate")
+    # CLIP is only candidate retrieval: it cannot certify content or replace
+    # the source movie frame with a higher-ranked distractor.
     from stage4.matching import bind_sentences_to_shots
     sys.path.insert(0,str(ROOT/"skills"/"film-review-orchestrator"/"scripts"))
     import evidence_qc
@@ -280,6 +320,19 @@ def _n07(ctx:WorkerContext,models:Path)->str:
     chosen_id=claims[0]["evidence_ids"][0]
     if claims[0]["verdict"]=="VISUAL_DIRECT" and chosen_id!=source_vision["id"]:
         raise ValueError("N05 visual claim does not match CLIP/Qwen frame evidence")
+    if claims[0]["verdict"]!="VISUAL_DIRECT":
+        raise ValueError("Synthetic N07 Qwen gate requires direct visual claim")
+    # Release CLIP GPU allocations before loading Qwen on RTX 4060.
+    del mdl,pre,im,txt,em,te
+    torch.cuda.empty_cache()
+    from stage5.qwen_provider import ask_qwen_visual
+    check=ask_qwen_visual(frame,claims[0]["text"],
+           models/"vision"/"qwen3-vl-2b-instruct")
+    visual_gate=gate_source_n07(ctx.source_sha256,source_dur,
+        claims[0],source_vision,digest(frame),scores,check["verdict"])
+    if visual_gate["status"]!="TENTATIVE_VISUAL_CANDIDATE":
+        raise ValueError("N07 model visual claim rejected: "+
+                         visual_gate.get("reason","unknown"))
     doc=bind_sentences_to_shots(
         source_sha256=ctx.source_sha256,source_duration_s=source_dur,
         voice_duration_s=voice_dur,catalog=story["catalog"],
@@ -293,15 +346,21 @@ def _n07(ctx:WorkerContext,models:Path)->str:
         "source_start_s":slot["source_start_s"],
         "source_end_s":slot["source_end_s"],
         "score_raw":scores[0],"other_scores":scores[1:],
-        "model":"local-CLIP-ViT-B-32","source_sha256":ctx.source_sha256,
+        "model":"local-CLIP-ViT-B-32-plus-Qwen3-VL","source_sha256":ctx.source_sha256,
+        "clip_rank":visual_gate["clip_source_rank_total_candidates"],
+        "visual_gate_status":visual_gate["status"],
+        "qwen_verdict":visual_gate["qwen_visual_verdict"],
         "synthetic_fixture":True}],jsonl=True)
     emit(ctx,"sentence_shot_map.json",doc)
     emit(ctx,"evidence_and_limits.jsonl",[{"sentence_id":captions[0]["sentence_id"],
       "clip_raw_cosine":scores,"model_verified":True,
       "source_evidence_id":chosen_id,
+      "qwen_exact_claim_verdict":check["verdict"],
+      "clip_source_rank":visual_gate["clip_source_rank_total_candidates"],
+      "model_semantics_human_approved":False,
       "qa_truncated":captions[0].get("qa_truncated",False),
       "limitation":"Single-sentence synthetic QA only; no feature-length shot matching"}],jsonl=True)
-    return "local-CLIP-source-bound-matching-with-original-N05-claims"
+    return "local-CLIP-Qwen3-VL-source-bound-N05-visual-gate-QA"
 
 def _n08(ctx:WorkerContext)->str:
     approved=ctx.job/"edit"/"pilot.mp4"
